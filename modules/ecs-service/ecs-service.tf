@@ -134,6 +134,15 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
 
 }
 
+output "securityGroupId" {
+  value = aws_security_group.serviceSg.id
+}
+output "securityGroupArn" {
+  value = aws_security_group.serviceSg.arn
+}
+output "securityGroupName" {
+  value = aws_security_group.serviceSg.name
+}
 #resource "aws_lb_listener_rule" "listenerRule" {
 #  count = length(var.networkLoadBalancerAttachments)
 #  listener_arn = var.networkLoadBalancerAttachments[count.index].listenerArn
