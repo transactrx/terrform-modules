@@ -85,6 +85,7 @@ variable "networkLoadBalancerAttachments" {
     protocol      = string
     lbArn         = string
     lbPort        = number
+    certificateArn = string
   }))
 }
 
@@ -98,6 +99,7 @@ resource "aws_lb_listener" "nlbListeners" {
   load_balancer_arn = var.networkLoadBalancerAttachments[count.index].lbArn
   port              = var.networkLoadBalancerAttachments[count.index].lbPort
   protocol          = var.networkLoadBalancerAttachments[count.index].protocol
+  certificate_arn = lower(var.networkLoadBalancerAttachments[count.index].protocol)=="tcp",null: var.networkLoadBalancerAttachments[count.index].certificateArn
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.nlbTargetGroup[count.index].arn
@@ -143,12 +145,3 @@ output "securityGroupArn" {
 output "securityGroupName" {
   value = aws_security_group.serviceSg.name
 }
-#resource "aws_lb_listener_rule" "listenerRule" {
-#  count = length(var.networkLoadBalancerAttachments)
-#  listener_arn = var.networkLoadBalancerAttachments[count.index].listenerArn
-#  action {
-#    type = "forward"
-#    target_group_arn = aws_lb_target_group.nlbTargetGroup[count.index].arn
-#  }
-#  condition {}
-#}
