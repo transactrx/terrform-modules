@@ -79,13 +79,14 @@ resource "aws_security_group_rule" "sgRules" {
 
 
 variable "networkLoadBalancerAttachments" {
-  type = list(object({
+  type = list(
+    object({
     containerName = string
     containerPort = number
     protocol      = string
     lbArn         = string
     lbPort        = number
-    certificateArn = string
+    certificateArn = optional(string)
   }))
 }
 
