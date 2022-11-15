@@ -69,7 +69,7 @@ data "aws_vpc" "vpc" {
 resource "aws_security_group_rule" "sgRules" {
   count             = length(var.networkLoadBalancerAttachments)
   from_port         = var.networkLoadBalancerAttachments[count.index].containerPort
-  protocol          = var.networkLoadBalancerAttachments[count.index].protocol
+  protocol          = "TCP"
   security_group_id = aws_security_group.serviceSg.id
   to_port           = var.networkLoadBalancerAttachments[count.index].containerPort
   type              = "ingress"
