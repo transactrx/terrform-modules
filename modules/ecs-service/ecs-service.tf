@@ -98,12 +98,11 @@ variable "vpc_id" {
 variable "ecs_service_protocol" {
   default = "TLS"
 }
-
 resource "aws_lb_listener" "nlbListeners" {
   count             = length(var.networkLoadBalancerAttachments)
   load_balancer_arn = var.networkLoadBalancerAttachments[count.index].lbArn
   port              = var.networkLoadBalancerAttachments[count.index].lbPort
-  protocol          = var.ecs_service_protocol
+  protocol          = var.networkLoadBalancerAttachments[count.index].protocol
   certificate_arn = lower(var.networkLoadBalancerAttachments[count.index].protocol)=="tcp"?null: var.networkLoadBalancerAttachments[count.index].certificateArn
   default_action {
     type             = "forward"
@@ -113,7 +112,7 @@ resource "aws_lb_listener" "nlbListeners" {
 
 resource "aws_lb_target_group" "nlbTargetGroup" {
   count                = length(var.networkLoadBalancerAttachments)
-  protocol             = var.networkLoadBalancerAttachments[count.index].protocol
+  protocol             = var.ecs_service_protocol
   target_type          = "ip"
   name                 = "${var.serviceName}-${var.networkLoadBalancerAttachments[count.index].containerName}-${var.networkLoadBalancerAttachments[count.index].containerPort}"
   deregistration_delay = 120
