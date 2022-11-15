@@ -95,11 +95,15 @@ variable "vpc_id" {
 }
 
 
+variable "ecs_service_protocol" {
+  default = "TLS"
+}
+
 resource "aws_lb_listener" "nlbListeners" {
   count             = length(var.networkLoadBalancerAttachments)
   load_balancer_arn = var.networkLoadBalancerAttachments[count.index].lbArn
   port              = var.networkLoadBalancerAttachments[count.index].lbPort
-  protocol          = var.networkLoadBalancerAttachments[count.index].protocol
+  protocol          = var.ecs_service_protocol
   certificate_arn = lower(var.networkLoadBalancerAttachments[count.index].protocol)=="tcp"?null: var.networkLoadBalancerAttachments[count.index].certificateArn
   default_action {
     type             = "forward"
