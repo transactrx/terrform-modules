@@ -50,7 +50,7 @@ module "codePipeline" {
   gitHubURL                   = var.githubURL
   githubConnectionArn         = var.githubConnectionArn
   serviceName                 = var.serviceName
-  addEcsToCodeDeploy          = true
+  addEcsToCodeDeploy          = false
 }
 
 resource "aws_cloudwatch_log_group" "pwl-tcp-server-test-log-group" {
