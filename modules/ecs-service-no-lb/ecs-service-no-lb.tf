@@ -37,6 +37,15 @@ variable "ecsClusterName" {
 variable "desiredCount" {
   type = number
 }
+
+variable "memory_mb" {
+  default = 512
+  type = number
+}
+variable "cpu_units" {
+  default = 1024
+  type = number
+}
 module "codePipeline" {
   source                      = "../cdspipeline"
   branchName                  = var.githubBranch
@@ -61,9 +70,9 @@ resource "aws_cloudwatch_log_group" "pwl-tcp-server-test-log-group" {
 
 module "pwl-tcp-server-testTaskDef" {
   source        = "../task-definition"
-  CPU           = 512
+  CPU           = var.cpu_units
   ContainerList = var.containerList
-  Memory        = 1024
+  Memory        = var.memory_mb
   taskDefFamily = module.codePipeline.serviceName
   mainImageURL  = "${module.codePipeline.imageUrl}:latest"
 }
