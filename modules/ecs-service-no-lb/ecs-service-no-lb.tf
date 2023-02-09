@@ -38,6 +38,7 @@ variable "desiredCount" {
   type = number
 }
 
+
 variable "memory_mb" {
   default = 512
   type = number
