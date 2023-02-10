@@ -19,7 +19,7 @@ data "aws_iam_policy_document" "s3_lb_write" {
     actions = ["s3:PutObject"]
     resources = ["${aws_s3_bucket.nlbAccessLogBucket.arn}/logs/*"]
 
-    principals = {
+    principals  {
       identifiers = [data.aws_elb_service_account.main.arn]
       type        = "AWS"
     }
