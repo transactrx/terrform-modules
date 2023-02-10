@@ -5,9 +5,33 @@ variable "private" {
   type = bool
 }
 
+data "aws_caller_identity" "current" {}
+data "aws_elb_service_account" "main" {}
+
 variable "subnetIds" {
   type = list(string)
 }
+data "aws_elb_service_account" "main" {}
+
+data "aws_iam_policy_document" "s3_lb_write" {
+  policy_id = "s3_lb_write"
+
+  statement = {
+    actions = ["s3:PutObject"]
+    resources = ["${aws_alb.nlb.arn}logs/*"]
+
+    principals = {
+      identifiers = [data.aws_elb_service_account.main.arn]
+      type = "AWS"
+    }
+  }
+}
+
+resource "aws_s3_bucket" "nlbAccessLogBucket" {
+  bucket = "$nlbaccesslogs-${var.name}-${data.aws_caller_identity.current.account_id}"
+}
+
+
 
 resource "aws_alb" "nlb" {
   name               = var.name
@@ -17,6 +41,10 @@ resource "aws_alb" "nlb" {
 
   enable_deletion_protection       = true
   enable_cross_zone_load_balancing = true
+  access_logs {
+    bucket = aws_s3_bucket.nlbAccessLogBucket.bucket
+    prefix = "logs"
+  }
 
 }
 
