@@ -14,11 +14,10 @@ variable "subnetIds" {
 
 
 data "aws_iam_policy_document" "s3_lb_write" {
-  policy_id = "s3_lb_write"
 
   statement = {
     actions = ["s3:PutObject"]
-    resources = ["${aws_alb.nlb.arn}logs/*"]
+    resources = ["${aws_s3_bucket.nlbAccessLogBucket.arn}/logs/*"]
 
     principals = {
       identifiers = [data.aws_elb_service_account.main.arn]
@@ -29,6 +28,12 @@ data "aws_iam_policy_document" "s3_lb_write" {
 
 resource "aws_s3_bucket" "nlbAccessLogBucket" {
   bucket = "$nlbaccesslogs-${var.name}-${data.aws_caller_identity.current.account_id}"
+
+}
+
+resource "aws_s3_bucket_policy" "allow_access_from_another_account" {
+  bucket = aws_s3_bucket.nlbAccessLogBucket.id
+  policy = data.aws_iam_policy_document.s3_lb_write.json
 }
 
 
@@ -44,6 +49,7 @@ resource "aws_alb" "nlb" {
   access_logs {
     bucket = aws_s3_bucket.nlbAccessLogBucket.bucket
     prefix = "logs"
+
   }
 
 }
