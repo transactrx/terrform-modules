@@ -11,7 +11,7 @@ data "aws_elb_service_account" "main" {}
 variable "subnetIds" {
   type = list(string)
 }
-data "aws_elb_service_account" "main" {}
+
 
 data "aws_iam_policy_document" "s3_lb_write" {
   policy_id = "s3_lb_write"
@@ -22,7 +22,7 @@ data "aws_iam_policy_document" "s3_lb_write" {
 
     principals = {
       identifiers = [data.aws_elb_service_account.main.arn]
-      type = "AWS"
+      type        = "AWS"
     }
   }
 }
