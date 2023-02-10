@@ -18,7 +18,7 @@ data "aws_iam_policy_document" "s3_lb_write" {
   statement {
     actions = ["s3:PutObject"]
     effect = "Allow"
-    resources = ["${aws_s3_bucket.nlbAccessLogBucket.arn}/logs/AWSLogs/${data.aws_caller_identity.current.account_id}/*"]
+    resources = ["${aws_s3_bucket.nlbAccessLogBucket.arn}/logs/*"]
 
     principals  {
       identifiers = ["${data.aws_elb_service_account.main.arn}"]
