@@ -15,7 +15,7 @@ variable "subnetIds" {
 
 data "aws_iam_policy_document" "s3_lb_write" {
 
-  statement = {
+  statement {
     actions = ["s3:PutObject"]
     resources = ["${aws_s3_bucket.nlbAccessLogBucket.arn}/logs/*"]
 
