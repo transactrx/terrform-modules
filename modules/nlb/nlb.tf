@@ -27,7 +27,7 @@ data "aws_iam_policy_document" "s3_lb_write" {
 }
 
 resource "aws_s3_bucket" "nlbAccessLogBucket" {
-  bucket = "$nlbaccesslogs-${var.name}-${data.aws_caller_identity.current.account_id}"
+  bucket =lower("nlbaccesslogs-${var.name}-${data.aws_caller_identity.current.account_id}")
 
 }
 
