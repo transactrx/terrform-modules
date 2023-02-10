@@ -49,7 +49,7 @@ resource "aws_alb" "nlb" {
   access_logs {
     bucket = aws_s3_bucket.nlbAccessLogBucket.bucket
     prefix = "logs"
-
+    enabled = true
   }
 
 }
