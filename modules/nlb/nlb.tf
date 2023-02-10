@@ -20,7 +20,7 @@ data "aws_iam_policy_document" "s3_lb_write" {
     resources = ["${aws_s3_bucket.nlbAccessLogBucket.arn}/logs/AWSLogs/your-aws-account-id/*"]
 
     principals  {
-      identifiers = ["${data.aws_elb_service_account.main.arn}:root"]
+      identifiers = ["${data.aws_elb_service_account.main.arn}"]
       type        = "AWS"
     }
   }
