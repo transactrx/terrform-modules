@@ -73,7 +73,7 @@ phases:
       - echo $DOCKERHUB_TOKEN > pass.txt
       - cat pass.txt|docker login --username $DOCKERHUB_USER --password-stdin
       - env
-      - docker build --build-arg "BUILD_NUMBER=1.0.1" --build-arg "GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN" --build-arg "GIT_BRANCH=$GIT_BRANCH" --build-arg "DOWNLOADLOCATION=$TOMCAT_DOWNLOAD_LOCATION" --build-arg "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" --build-arg "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" --build-arg "AWS_REGION=$AWS_DEFAULT_REGION" --build-arg "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" -t "$REPO_URL:$VERSION" .
+      - docker build --build-arg "PAT=$PAT" --build-arg "BUILD_NUMBER=1.0.1" --build-arg "GITHUB_ACCESS_TOKEN=$GITHUB_ACCESS_TOKEN" --build-arg "GIT_BRANCH=$GIT_BRANCH" --build-arg "DOWNLOADLOCATION=$TOMCAT_DOWNLOAD_LOCATION" --build-arg "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" --build-arg "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" --build-arg "AWS_REGION=$AWS_DEFAULT_REGION" --build-arg "AWS_SESSION_TOKEN=$AWS_SESSION_TOKEN" -t "$REPO_URL:$VERSION" .
       - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
       - docker tag "$REPO_URL:$VERSION" $REPO_URL:latest
       - docker push "$REPO_URL:$VERSION"
@@ -108,6 +108,11 @@ resource "aws_codebuild_project" "codebuildProject" {
     }
     environment_variable {
       name  = "GITHUB_ACCESS_TOKEN"
+      value = var.githubAccessToken
+      type  = "SECRETS_MANAGER"
+    }
+    environment_variable {
+      name  = "PAT"
       value = var.githubAccessToken
       type  = "SECRETS_MANAGER"
     }
@@ -172,6 +177,11 @@ resource "aws_codebuild_project" "codebuildProjectArm" {
     }
     environment_variable {
       name  = "GITHUB_ACCESS_TOKEN"
+      value = var.githubAccessToken
+      type  = "SECRETS_MANAGER"
+    }
+    environment_variable {
+      name  = "PAT"
       value = var.githubAccessToken
       type  = "SECRETS_MANAGER"
     }
