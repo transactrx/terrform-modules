@@ -13,29 +13,29 @@ variable "subnetIds" {
 }
 
 
-data "aws_iam_policy_document" "s3_lb_write" {
+#data "aws_iam_policy_document" "s3_lb_write" {
+#
+#  statement {
+#    actions = ["s3:PutObject"]
+#    effect = "Allow"
+#    resources = ["${aws_s3_bucket.nlbAccessLogBucket.arn}/logs/*"]
+#
+#    principals  {
+#      identifiers = ["${data.aws_elb_service_account.main.arn}"]
+#      type        = "AWS"
+#    }
+#  }
+#}
 
-  statement {
-    actions = ["s3:PutObject"]
-    effect = "Allow"
-    resources = ["${aws_s3_bucket.nlbAccessLogBucket.arn}/logs/*"]
-
-    principals  {
-      identifiers = ["${data.aws_elb_service_account.main.arn}"]
-      type        = "AWS"
-    }
-  }
-}
-
-resource "aws_s3_bucket" "nlbAccessLogBucket" {
-  bucket =lower("nlbaccesslogs-${var.name}-${data.aws_caller_identity.current.account_id}")
-
-}
-
-resource "aws_s3_bucket_policy" "allow_access_from_another_account" {
-  bucket = aws_s3_bucket.nlbAccessLogBucket.id
-  policy = data.aws_iam_policy_document.s3_lb_write.json
-}
+#resource "aws_s3_bucket" "nlbAccessLogBucket" {
+#  bucket =lower("nlbaccesslogs-${var.name}-${data.aws_caller_identity.current.account_id}")
+#
+#}
+#
+#resource "aws_s3_bucket_policy" "allow_access_from_another_account" {
+#  bucket = aws_s3_bucket.nlbAccessLogBucket.id
+#  policy = data.aws_iam_policy_document.s3_lb_write.json
+#}
 
 
 
@@ -47,11 +47,11 @@ resource "aws_alb" "nlb" {
 
   enable_deletion_protection       = true
   enable_cross_zone_load_balancing = true
-  access_logs {
-    bucket = aws_s3_bucket.nlbAccessLogBucket.bucket
-    prefix = "logs"
-    enabled = true
-  }
+#  access_logs {
+#    bucket = aws_s3_bucket.nlbAccessLogBucket.bucket
+#    prefix = "logs"
+#    enabled = true
+#  }
 
 }
 
