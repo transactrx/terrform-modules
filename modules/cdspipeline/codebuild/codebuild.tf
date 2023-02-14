@@ -1,6 +1,9 @@
 variable "dockerHubCredentials" {
 }
 variable "githubAccessToken" {}
+variable "NugetPat" {
+  type = string
+}
 variable "arm64Support" {
   default = false
 }
@@ -113,7 +116,7 @@ resource "aws_codebuild_project" "codebuildProject" {
     }
     environment_variable {
       name  = "PAT"
-      value = var.githubAccessToken
+      value = var.NugetPat
       type  = "SECRETS_MANAGER"
     }
 
@@ -156,6 +159,7 @@ resource "aws_codebuild_project" "codebuildProject" {
 
 }
 
+
 resource "aws_codebuild_project" "codebuildProjectArm" {
   count        = var.arm64Support?1 : 0
   name         = "ecs-${var.name}-arm"
@@ -182,7 +186,7 @@ resource "aws_codebuild_project" "codebuildProjectArm" {
     }
     environment_variable {
       name  = "PAT"
-      value = var.githubAccessToken
+      value = var.NugetPat
       type  = "SECRETS_MANAGER"
     }
     environment_variable {
