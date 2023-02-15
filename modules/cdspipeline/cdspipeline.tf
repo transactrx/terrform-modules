@@ -59,8 +59,9 @@ data "aws_caller_identity" "current" {
 //codePipeLineS3Bucket=module.codePipelineDepsProd.codePipelineS3Bucket
 
 
-variable "NugetPatSecretArn" {
-}
+
+
+
 module "codebuild" {
   source                 = "./codebuild"
   codebuildRoleArn       = var.codeBuildRoleArn
@@ -73,7 +74,6 @@ module "codebuild" {
   useDefaultBuildSpec    = var.useDefaultBuildSpec
   arm64Support           = var.arm64Support
   buildVariables         = var.buildVariables
-  NugetPat               = var.NugetPatSecretArn
 }
 
 

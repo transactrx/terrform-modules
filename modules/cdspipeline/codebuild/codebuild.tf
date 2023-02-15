@@ -1,9 +1,7 @@
 variable "dockerHubCredentials" {
 }
 variable "githubAccessToken" {}
-variable "NugetPat" {
-  type = string
-}
+
 variable "arm64Support" {
   default = false
 }
@@ -114,11 +112,7 @@ resource "aws_codebuild_project" "codebuildProject" {
       value = var.githubAccessToken
       type  = "SECRETS_MANAGER"
     }
-    environment_variable {
-      name  = "PAT"
-      value = var.NugetPat
-      type  = "SECRETS_MANAGER"
-    }
+
 
     environment_variable {
       name  = "REPO_URL"
@@ -184,11 +178,7 @@ resource "aws_codebuild_project" "codebuildProjectArm" {
       value = var.githubAccessToken
       type  = "SECRETS_MANAGER"
     }
-    environment_variable {
-      name  = "PAT"
-      value = var.NugetPat
-      type  = "SECRETS_MANAGER"
-    }
+
     environment_variable {
       name  = "REPO_URL"
       value = aws_ecr_repository.ecrRepo.repository_url
