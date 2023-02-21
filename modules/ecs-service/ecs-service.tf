@@ -39,13 +39,14 @@ resource "aws_ecs_service" "pwl-tcp-server-test-ecs-service" {
     }
   }
   task_definition = var.taskDefinitionFull
+
   network_configuration {
     subnets         = var.subNets
     security_groups = [aws_security_group.serviceSg.id]
   }
   lifecycle {
     ignore_changes = [
-      "capacity_provider_strategy"
+      "capacity_provider_strategy","task_definition"
     ]
   }
 }
