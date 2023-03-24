@@ -40,7 +40,7 @@ variable "buildVariables" {
 }
 
 locals {
-  defaultBuildSpec = <<DEFINITION
+  defaultBuildSpecRaw = <<DEFINITION
 version: 0.2
 
 phases:
@@ -87,6 +87,47 @@ artifacts:
   files: taskdefinition.json
 
 DEFINITION
+
+  defaultBuildSpec=chomp(replace(local.defaultBuildSpecRaw,"\r\n","\n"))
+
+  armManifestBuildSpecRaw=<<DEFINITION
+version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
+  pre_build:
+    commands:
+      - echo pre-build phase...
+  build:
+    commands:
+      - echo Build started on `date`
+      - echo Building the Docker manifest...
+      - export DOCKER_CLI_EXPERIMENTAL=enabled
+      - docker manifest create $REPO_URL:latest $REPO_URL:$COMMIT_ID-aarch64 $REPO_URL:$COMMIT_ID-x86_64
+      - docker manifest annotate --arch arm64 $REPO_URL:latest $REPO_URL:$COMMIT_ID-aarch64
+      - docker manifest annotate --arch amd64 $REPO_URL:latest $REPO_URL:$COMMIT_ID-x86_64
+      - echo Pushing the Docker image...
+      - docker manifest push $REPO_URL:latest
+      - docker manifest inspect $REPO_URL:latest
+      - echo Create Manifest with specific version
+      - docker manifest create $REPO_URL:$COMMIT_ID $REPO_URL:$COMMIT_ID-aarch64 $REPO_URL:$COMMIT_ID-x86_64
+      - docker manifest annotate --arch arm64 $REPO_URL:$COMMIT_ID $REPO_URL:$COMMIT_ID-aarch64
+      - docker manifest annotate --arch amd64 $REPO_URL:$COMMIT_ID $REPO_URL:$COMMIT_ID-x86_64
+      - echo Pushing the Docker image...
+      - docker manifest push $REPO_URL:$COMMIT_ID
+      - docker manifest inspect $REPO_URL:$COMMIT_ID
+  post_build:
+    commands:
+      - printf '[{"name":"main","imageUri":"%s"}]' "$REPO_URL:$COMMIT_ID" > taskdefinition.json
+      - echo Build completed on `date`
+artifacts:
+  files: taskdefinition.json
+
+DEFINITION
+  armManifestBuildSpec=chomp(replace(local.armManifestBuildSpecRaw,"\r\n" ,"\n"))
 }
 
 resource "aws_codebuild_project" "codebuildProject" {
@@ -243,44 +284,7 @@ resource "aws_codebuild_project" "codebuildProjectManifest" {
     type            = "GITHUB"
     location        = var.gitURL
     git_clone_depth = 1
-    buildspec       = <<DEFINITION
-version: 0.2
-
-phases:
-  install:
-    commands:
-      - echo Logging in to Amazon ECR...
-      - $(aws ecr get-login --no-include-email --region $AWS_DEFAULT_REGION)
-  pre_build:
-    commands:
-      - echo pre-build phase...
-  build:
-    commands:
-      - echo Build started on `date`
-      - echo Building the Docker manifest...
-      - export DOCKER_CLI_EXPERIMENTAL=enabled
-      - docker manifest create $REPO_URL:latest $REPO_URL:$COMMIT_ID-aarch64 $REPO_URL:$COMMIT_ID-x86_64
-      - docker manifest annotate --arch arm64 $REPO_URL:latest $REPO_URL:$COMMIT_ID-aarch64
-      - docker manifest annotate --arch amd64 $REPO_URL:latest $REPO_URL:$COMMIT_ID-x86_64
-      - echo Pushing the Docker image...
-      - docker manifest push $REPO_URL:latest
-      - docker manifest inspect $REPO_URL:latest
-      - echo Create Manifest with specific version
-      - docker manifest create $REPO_URL:$COMMIT_ID $REPO_URL:$COMMIT_ID-aarch64 $REPO_URL:$COMMIT_ID-x86_64
-      - docker manifest annotate --arch arm64 $REPO_URL:$COMMIT_ID $REPO_URL:$COMMIT_ID-aarch64
-      - docker manifest annotate --arch amd64 $REPO_URL:$COMMIT_ID $REPO_URL:$COMMIT_ID-x86_64
-      - echo Pushing the Docker image...
-      - docker manifest push $REPO_URL:$COMMIT_ID
-      - docker manifest inspect $REPO_URL:$COMMIT_ID
-  post_build:
-    commands:
-      - printf '[{"name":"main","imageUri":"%s"}]' "$REPO_URL:$COMMIT_ID" > taskdefinition.json
-      - echo Build completed on `date`
-artifacts:
-  files: taskdefinition.json
-
-DEFINITION
-
+    buildspec       = local.armManifestBuildSpec
 
     git_submodules_config {
       fetch_submodules = true
