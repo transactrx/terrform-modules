@@ -92,7 +92,17 @@ variable "networkLoadBalancerAttachments" {
     lbArn         = string
     lbPort        = number
     certificateArn = optional(string)
+    name=optional(string)
   }))
+  default = [{
+    containerName   = null
+    containerPort   = null
+    protocol        = null
+    lbArn           = null
+    lbPort          = null
+    certificateArn  = null
+    name            = ""
+  }]
 }
 
 variable "vpc_id" {
@@ -119,7 +129,7 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
   count                = length(var.networkLoadBalancerAttachments)
   protocol             = var.ecs_service_protocol
   target_type          = "ip"
-  name                 = "${var.serviceName}-${var.networkLoadBalancerAttachments[count.index].containerName}-${var.networkLoadBalancerAttachments[count.index].containerPort}"
+  name                 = "${var.serviceName}${var.networkLoadBalancerAttachments[count.index].name}-${var.networkLoadBalancerAttachments[count.index].containerName}-${var.networkLoadBalancerAttachments[count.index].containerPort}"
   deregistration_delay = 120
   port                 = var.networkLoadBalancerAttachments[count.index].containerPort
   //  load_balancing_algorithm_type = "least_outstanding_requests"
