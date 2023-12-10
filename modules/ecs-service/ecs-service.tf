@@ -67,12 +67,16 @@ data "aws_vpc" "vpc" {
   id = var.vpc_id
 }
 
+locals {
+  containerPortsToBeOpen=distinct(var.networkLoadBalancerAttachments.*.containerPort)
+}
+
 resource "aws_security_group_rule" "sgRules" {
-  count             = length(var.networkLoadBalancerAttachments)
-  from_port         = var.networkLoadBalancerAttachments[count.index].containerPort
+  count             = length(local.containerPortsToBeOpen)
+  from_port         = local.containerPortsToBeOpen[count.index]
   protocol          = "TCP"
   security_group_id = aws_security_group.serviceSg.id
-  to_port           = var.networkLoadBalancerAttachments[count.index].containerPort
+  to_port           = local.containerPortsToBeOpen[count.index]
   type              = "ingress"
   cidr_blocks       = [data.aws_vpc.vpc.cidr_block]
   description       = "access from within vpc"
