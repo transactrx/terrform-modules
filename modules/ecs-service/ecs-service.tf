@@ -129,7 +129,7 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
   count                = length(var.networkLoadBalancerAttachments)
   protocol             = var.ecs_service_protocol
   target_type          = "ip"
-  name                 = var.networkLoadBalancerAttachments[count.index].name!=null ?"${var.serviceName}${var.networkLoadBalancerAttachments[count.index].name}":"${var.serviceName}-${var.networkLoadBalancerAttachments[count.index].containerName}-${var.networkLoadBalancerAttachments[count.index].containerPort}"
+  name                 = var.networkLoadBalancerAttachments[count.index].name!=null ? "${var.serviceName}-${var.networkLoadBalancerAttachments[count.index].name}" : "${var.serviceName}-${var.networkLoadBalancerAttachments[count.index].containerName}-${var.networkLoadBalancerAttachments[count.index].containerPort}"
   deregistration_delay = 120
   port                 = var.networkLoadBalancerAttachments[count.index].containerPort
   //  load_balancing_algorithm_type = "least_outstanding_requests"
