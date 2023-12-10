@@ -21,6 +21,11 @@ variable "mainImageURL" {
   type = string
 }
 
+variable "addExtraFargateStorage" {
+  type = bool
+  default = false
+}
+
 resource "aws_iam_role" "ecs_task_execution_role" {
   name = "${var.taskDefFamily}-ecs-execution-role"
 
@@ -121,6 +126,13 @@ resource "aws_ecs_task_definition" "test" {
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
 
   skip_destroy = true
+
+  dynamic "ephemeral_storage" {
+    for_each = var.addExtraFargateStorage ? [1] : []
+    content {
+      size_in_gib = 200
+    }
+  }
 
 }
 
