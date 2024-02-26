@@ -14,6 +14,14 @@ variable "deploymentMaxPercent" {
 variable "subNets" {
   type = list(string)
 }
+variable "healthCheckPort" {
+  type = number
+  default = -1
+}
+
+locals {
+  nlbHealthCheck= var.healthCheckPort==-1? var.networkLoadBalancerAttachments[count.index].containerPort:var.healthCheckPort
+}
 
 variable "taskDefinitionFull" {}
 variable "desiredCount" {
@@ -68,7 +76,7 @@ data "aws_vpc" "vpc" {
 }
 
 locals {
-  containerPortsToBeOpen=distinct(var.networkLoadBalancerAttachments.*.containerPort)
+  containerPortsToBeOpen=distinct(concat(var.networkLoadBalancerAttachments.*.containerPort,local.nlbHealthCheck))
 }
 
 resource "aws_security_group_rule" "sgRules" {
@@ -81,6 +89,7 @@ resource "aws_security_group_rule" "sgRules" {
   cidr_blocks       = [data.aws_vpc.vpc.cidr_block]
   description       = "access from within vpc"
 }
+
 
 
 variable "networkLoadBalancerAttachments" {
@@ -145,7 +154,7 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
   }
   health_check {
     protocol            = "TCP"
-    port                = var.networkLoadBalancerAttachments[count.index].containerPort
+    port                = local.nlbHealthCheck
     healthy_threshold   = 5
     unhealthy_threshold = 5
     enabled             = true
