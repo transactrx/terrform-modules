@@ -76,7 +76,7 @@ data "aws_vpc" "vpc" {
 }
 
 locals {
-  containerPortsToBeOpen=distinct(concat(var.networkLoadBalancerAttachments.*.containerPort,local.nlbHealthCheck))
+  containerPortsToBeOpen=distinct(var.networkLoadBalancerAttachments.*.containerPort)
 }
 
 resource "aws_security_group_rule" "sgRules" {
@@ -91,7 +91,6 @@ resource "aws_security_group_rule" "sgRules" {
 }
 
 
-
 variable "networkLoadBalancerAttachments" {
   type = list(
     object({
@@ -102,6 +101,7 @@ variable "networkLoadBalancerAttachments" {
     lbPort        = number
     certificateArn = optional(string)
     name=optional(string)
+    healthCheckPort=number
   }))
   default = [{
     containerName   = null
@@ -111,6 +111,7 @@ variable "networkLoadBalancerAttachments" {
     lbPort          = null
     certificateArn  = null
     name            = null
+    healthCheckPort=null
   }]
 }
 
@@ -154,7 +155,7 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
   }
   health_check {
     protocol            = "TCP"
-    port                = local.nlbHealthCheck
+    port                =  var.networkLoadBalancerAttachments[count.index]==null?var.networkLoadBalancerAttachments[count.index].containerPort:var.networkLoadBalancerAttachments[count.index].healthCheckPort
     healthy_threshold   = 5
     unhealthy_threshold = 5
     enabled             = true
