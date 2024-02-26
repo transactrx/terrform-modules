@@ -20,7 +20,7 @@ variable "healthCheckPort" {
 }
 
 locals {
-  nlbHealthCheck= var.healthCheckPort==-1? var.networkLoadBalancerAttachments[count.index].containerPort:var.healthCheckPort
+  nlbHealthCheck= var.healthCheckPort==-1? var.networkLoadBalancerAttachments.*.containerPort:var.healthCheckPort
 }
 
 variable "taskDefinitionFull" {}
