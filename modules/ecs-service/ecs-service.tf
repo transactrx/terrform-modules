@@ -14,14 +14,6 @@ variable "deploymentMaxPercent" {
 variable "subNets" {
   type = list(string)
 }
-variable "healthCheckPort" {
-  type = number
-  default = -1
-}
-
-locals {
-  nlbHealthCheck= var.healthCheckPort==-1? var.networkLoadBalancerAttachments.*.containerPort:var.healthCheckPort
-}
 
 variable "taskDefinitionFull" {}
 variable "desiredCount" {
