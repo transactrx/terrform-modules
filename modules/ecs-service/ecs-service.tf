@@ -86,14 +86,14 @@ resource "aws_security_group_rule" "sgRules" {
 variable "networkLoadBalancerAttachments" {
   type = list(
     object({
-    containerName = string
-    containerPort = number
-    protocol      = string
-    lbArn         = string
-    lbPort        = number
-    certificateArn = optional(string)
-    name=optional(string)
-    healthCheckPort=number
+    containerName   = string
+    containerPort   = number
+    protocol        = string
+    lbArn           = string
+    lbPort          = number
+    certificateArn  = optional(string)
+    name            = optional(string)
+    healthCheckPort = optional(number)
   }))
   default = [{
     containerName   = null
@@ -103,7 +103,7 @@ variable "networkLoadBalancerAttachments" {
     lbPort          = null
     certificateArn  = null
     name            = null
-    healthCheckPort=null
+    healthCheckPort = null
   }]
 }
 
