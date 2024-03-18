@@ -18,23 +18,57 @@ variable "min_capacity" {
   type        = number
 }
 
-variable "scale_out_target_value" {
+variable "enable_cpu_scaling" {
+  description = "Enable auto-scaling based on CPU utilization."
+  type        = bool
+  default     = false
+}
+
+variable "cpu_scale_out_target_value" {
   description = "The target value for the scale out policy (e.g., CPU utilization)."
   type        = number
 }
 
-variable "scale_in_target_value" {
+variable "cpu_scale_in_target_value" {
   description = "The target value for the CPU utilization to scale in."
   type        = number
 }
 
-variable "scale_in_cooldown" {
+variable "cpu_scale_in_cooldown" {
   description = "The cooldown period before allowing another scale in after the last one."
   type        = number
   default     = 300
 }
 
-variable "scale_out_cooldown" {
+variable "cpu_scale_out_cooldown" {
+  description = "The cooldown period before allowing another scale out after the last one."
+  type        = number
+  default     = 300
+}
+
+variable "enable_memory_scaling" {
+  description = "Enable auto-scaling based on Memory utilization."
+  type        = bool
+  default     = false
+}
+
+variable "mem_scale_out_target_value" {
+  description = "The target value for the scale out policy (e.g., Memory utilization)."
+  type        = number
+}
+
+variable "mem_scale_in_target_value" {
+  description = "The target value for the Memory utilization to scale in."
+  type        = number
+}
+
+variable "mem_scale_in_cooldown" {
+  description = "The cooldown period before allowing another scale in after the last one."
+  type        = number
+  default     = 300
+}
+
+variable "mem_scale_out_cooldown" {
   description = "The cooldown period before allowing another scale out after the last one."
   type        = number
   default     = 300
@@ -48,8 +82,9 @@ resource "aws_appautoscaling_target" "ecs_service_target" {
   service_namespace  = "ecs"
 }
 
-resource "aws_appautoscaling_policy" "scale_out_policy" {
-  name               = "${var.service_name}_scale_out"
+resource "aws_appautoscaling_policy" "ecs_average_cpu_scaling_policy" {
+  count              = var.enable_cpu_scaling ? 1 : 0
+  name               = "${var.service_name}_average_cpu_scaling_policy"
   service_namespace  = aws_appautoscaling_target.ecs_service_target.service_namespace
   resource_id        = aws_appautoscaling_target.ecs_service_target.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs_service_target.scalable_dimension
@@ -59,14 +94,15 @@ resource "aws_appautoscaling_policy" "scale_out_policy" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageCPUUtilization"
     }
-    target_value       = var.scale_out_target_value
-    scale_in_cooldown  = var.scale_in_cooldown
-    scale_out_cooldown = var.scale_out_cooldown
+    target_value       = var.cpu_scale_out_target_value
+    scale_in_cooldown  = var.cpu_scale_in_cooldown
+    scale_out_cooldown = var.cpu_scale_out_cooldown
   }
 }
 
-resource "aws_appautoscaling_policy" "scale_in_policy" {
-  name               = "${var.service_name}_scale_in"
+resource "aws_appautoscaling_policy" "ecs_memory_scaling_policy" {
+  count              = var.enable_memory_scaling ? 1 : 0
+  name               = "${var.service_name}_memory_scaling_policy"
   service_namespace  = aws_appautoscaling_target.ecs_service_target.service_namespace
   resource_id        = aws_appautoscaling_target.ecs_service_target.resource_id
   scalable_dimension = aws_appautoscaling_target.ecs_service_target.scalable_dimension
@@ -74,10 +110,10 @@ resource "aws_appautoscaling_policy" "scale_in_policy" {
 
   target_tracking_scaling_policy_configuration {
     predefined_metric_specification {
-      predefined_metric_type = "ECSServiceAverageCPUUtilization"
+      predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
-    target_value       = var.scale_in_target_value
-    scale_in_cooldown  = var.scale_in_cooldown
-    scale_out_cooldown = var.scale_out_cooldown
+    target_value       = var.mem_scale_in_target_value
+    scale_in_cooldown  = var.mem_scale_in_cooldown
+    scale_out_cooldown = var.mem_scale_out_cooldown
   }
 }
