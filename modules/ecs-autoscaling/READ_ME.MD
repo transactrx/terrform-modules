@@ -26,8 +26,8 @@ module "ecs_auto_scaling" {
   enable_cpu_scaling       = true
   cpu_scale_out_target_value = 75
   cpu_scale_in_target_value  = 25
-  cpu_scale_in_cooldown      = 300
-  cpu_scale_out_cooldown     = 300
+  cpu_scale_in_cooldown      = 120
+  cpu_scale_out_cooldown     = 120
 }
 ```
 
@@ -44,8 +44,8 @@ module "ecs_auto_scaling" {
     enable_memory_scaling       = true
     mem_scale_out_target_value  = 80
     mem_scale_in_target_value   = 30
-    mem_scale_in_cooldown       = 300
-    mem_scale_out_cooldown      = 300
+    mem_scale_in_cooldown       = 120
+    mem_scale_out_cooldown      = 120
 }
 ```
 
@@ -63,12 +63,12 @@ module "ecs_auto_scaling" {
   enable_memory_scaling       = true
   cpu_scale_out_target_value  = 75
   cpu_scale_in_target_value   = 25
-  cpu_scale_in_cooldown       = 300
-  cpu_scale_out_cooldown      = 300
+  cpu_scale_in_cooldown       = 120
+  cpu_scale_out_cooldown      = 120
   mem_scale_out_target_value  = 80
   mem_scale_in_target_value   = 30
-  mem_scale_in_cooldown       = 300
-  mem_scale_out_cooldown      = 300
+  mem_scale_in_cooldown       = 120
+  mem_scale_out_cooldown      = 120
 }
 ```
 
@@ -82,13 +82,13 @@ module "ecs_auto_scaling" {
 | `enable_cpu_scaling` | Enable auto-scaling based on CPU utilization. | `bool` | `false` | no |
 | `cpu_scale_out_target_value` | The target value for the scale out policy (e.g., CPU utilization). | `number` | n/a | yes if `enable_cpu_scaling` is `true` |
 | `cpu_scale_in_target_value` | The target value for the CPU utilization to scale in. | `number` | n/a | yes if `enable_cpu_scaling` is `true` |
-| `cpu_scale_in_cooldown` | The cooldown period before allowing another scale in after the last one. | `number` | `300` | no |
-| `cpu_scale_out_cooldown` | The cooldown period before allowing another scale out after the last one. | `number` | `300` | no |
+| `cpu_scale_in_cooldown` | The cooldown period before allowing another scale in after the last one. | `number` | `120` | no |
+| `cpu_scale_out_cooldown` | The cooldown period before allowing another scale out after the last one. | `number` | `120` | no |
 | `enable_memory_scaling` | Enable auto-scaling based on Memory utilization. | `bool` | `false` | no |
 | `mem_scale_out_target_value` | The target value for the scale out policy (e.g., Memory utilization). | `number` | n/a | yes if `enable_memory_scaling` is `true` |
 | `mem_scale_in_target_value` | The target value for the Memory utilization to scale in. | `number` | n/a | yes if `enable_memory_scaling` is `true` |
-| `mem_scale_in_cooldown` | The cooldown period before allowing another scale in after the last one. | `number` | `300` | no |
-| `mem_scale_out_cooldown` | The cooldown period before allowing another scale out after the last one. | `number` | `300` | no |
+| `mem_scale_in_cooldown` | The cooldown period before allowing another scale in after the last one. | `number` | `120` | no |
+| `mem_scale_out_cooldown` | The cooldown period before allowing another scale out after the last one. | `number` | `120` | no |
 
 ### Outputs
 | Name | Description |

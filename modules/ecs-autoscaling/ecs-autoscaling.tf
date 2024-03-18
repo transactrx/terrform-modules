@@ -27,23 +27,25 @@ variable "enable_cpu_scaling" {
 variable "cpu_scale_out_target_value" {
   description = "The target value for the scale out policy (e.g., CPU utilization)."
   type        = number
+  default     = 80
 }
 
 variable "cpu_scale_in_target_value" {
   description = "The target value for the CPU utilization to scale in."
   type        = number
+  default     = 60
 }
 
 variable "cpu_scale_in_cooldown" {
   description = "The cooldown period before allowing another scale in after the last one."
   type        = number
-  default     = 300
+  default     = 120
 }
 
 variable "cpu_scale_out_cooldown" {
   description = "The cooldown period before allowing another scale out after the last one."
   type        = number
-  default     = 300
+  default     = 120
 }
 
 variable "enable_memory_scaling" {
@@ -55,23 +57,25 @@ variable "enable_memory_scaling" {
 variable "mem_scale_out_target_value" {
   description = "The target value for the scale out policy (e.g., Memory utilization)."
   type        = number
+  default     = 80
 }
 
 variable "mem_scale_in_target_value" {
   description = "The target value for the Memory utilization to scale in."
   type        = number
+  default     = 60
 }
 
 variable "mem_scale_in_cooldown" {
   description = "The cooldown period before allowing another scale in after the last one."
   type        = number
-  default     = 300
+  default     = 120
 }
 
 variable "mem_scale_out_cooldown" {
   description = "The cooldown period before allowing another scale out after the last one."
   type        = number
-  default     = 300
+  default     = 120
 }
 
 resource "aws_appautoscaling_target" "ecs_service_target" {
