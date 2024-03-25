@@ -158,13 +158,11 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
 variable "max_capacity" {
   description = "The maximum number of tasks the service should scale out to."
   type        = number
-  default     = var.desiredCount*2
 }
 
 variable "min_capacity" {
   description = "The minimum number of tasks the service should scale in to."
   type        = number
-  default     = var.desiredCount
 }
 
 variable "enable_cpu_scaling" {
@@ -228,6 +226,8 @@ variable "mem_scale_out_cooldown" {
 }
 
 resource "aws_appautoscaling_target" "ecs_service_target" {
+  count = var.enable_cpu_scaling || var.enable_memory_scaling ? 1 : 0
+
   max_capacity       = var.max_capacity
   min_capacity       = var.min_capacity
   resource_id        = "service/${var.clusterName}/${var.serviceName}"
