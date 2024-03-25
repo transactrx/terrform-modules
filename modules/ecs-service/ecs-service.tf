@@ -158,13 +158,13 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
 variable "max_capacity" {
   description = "The maximum number of tasks the service should scale out to."
   type        = number
-  default     = var.desiredCount * 2
+  default     = 10
 }
 
 variable "min_capacity" {
   description = "The minimum number of tasks the service should scale in to."
   type        = number
-  default     = var.desiredCount
+  default     = 1
 }
 
 variable "enable_cpu_scaling" {
