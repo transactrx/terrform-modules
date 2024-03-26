@@ -174,6 +174,14 @@ variable "auto_scaler_config" {
   })
 }
 
+locals {
+  default_auto_scaler_config = {
+    enable_cpu_scaling         = false
+    enable_memory_scaling      = false
+  }
+  auto_scaler_config = merge(local.default_auto_scaler_config, var.auto_scaler_config)
+}
+
 resource "aws_appautoscaling_target" "ecs_service_target" {
   count = var.auto_scaler_config.enable_cpu_scaling || var.auto_scaler_config.enable_memory_scaling ? 1 : 0
 
