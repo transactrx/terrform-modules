@@ -157,41 +157,21 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
 
 variable "auto_scaler_config" {
   type = object({
-    max_capacity = number
-    min_capacity = number
+    max_capacity = optional(number, 10)
+    min_capacity = optional(number, 1)
 
-    enable_cpu_scaling = bool
-    cpu_scale_out_target_value = number
-    cpu_scale_in_target_value = number
-    cpu_scale_in_cooldown = number
-    cpu_scale_out_cooldown = number
+    enable_cpu_scaling = optional(bool, false)
+    cpu_scale_out_target_value = optional(number, 80)
+    cpu_scale_in_target_value = optional(number, 60)
+    cpu_scale_in_cooldown = optional(number, 120)
+    cpu_scale_out_cooldown = optional(number, 120)
 
-    enable_memory_scaling = bool
-    mem_scale_out_target_value = number
-    mem_scale_in_target_value = number
-    mem_scale_in_cooldown = number
-    mem_scale_out_cooldown = number
+    enable_memory_scaling = optional(bool, false)
+    mem_scale_out_target_value = optional(number, 80)
+    mem_scale_in_target_value = optional(number, 60)
+    mem_scale_in_cooldown = optional(number, 120)
+    mem_scale_out_cooldown = optional(number, 120)
   })
-  default = {}
-}
-
-locals {
-  default_auto_scaler_config = {
-    max_capacity               = 10
-    min_capacity               = 1
-    enable_cpu_scaling         = false
-    cpu_scale_out_target_value = 80
-    cpu_scale_in_target_value  = 60
-    cpu_scale_in_cooldown      = 120
-    cpu_scale_out_cooldown     = 120
-    enable_memory_scaling      = false
-    mem_scale_out_target_value = 80
-    mem_scale_in_target_value  = 60
-    mem_scale_in_cooldown      = 120
-    mem_scale_out_cooldown     = 120
-  }
-
-  auto_scaler_config = merge(local.default_auto_scaler_config, var.auto_scaler_config)
 }
 
 resource "aws_appautoscaling_target" "ecs_service_target" {
