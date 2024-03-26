@@ -172,20 +172,7 @@ variable "auto_scaler_config" {
     mem_scale_in_cooldown = number
     mem_scale_out_cooldown = number
   })
-  default = {
-    max_capacity               = 0
-    min_capacity               = 0
-    enable_cpu_scaling         = false
-    cpu_scale_out_target_value = 0
-    cpu_scale_in_target_value  = 0
-    cpu_scale_in_cooldown      = 0
-    cpu_scale_out_cooldown     = 0
-    enable_memory_scaling      = false
-    mem_scale_out_target_value = 0
-    mem_scale_in_target_value  = 0
-    mem_scale_in_cooldown      = 0
-    mem_scale_out_cooldown     = 0
-  }
+  default = {}
 }
 
 locals {
