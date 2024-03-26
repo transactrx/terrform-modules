@@ -172,14 +172,20 @@ variable "auto_scaler_config" {
     mem_scale_in_cooldown = optional(number, 120)
     mem_scale_out_cooldown = optional(number, 120)
   })
-}
-
-locals {
-  default_auto_scaler_config = {
+  default = {
+    max_capacity               = 10
+    min_capacity               = 1
     enable_cpu_scaling         = false
+    cpu_scale_out_target_value = 80
+    cpu_scale_in_target_value  = 60
+    cpu_scale_in_cooldown      = 120
+    cpu_scale_out_cooldown     = 120
     enable_memory_scaling      = false
+    mem_scale_out_target_value = 80
+    mem_scale_in_target_value  = 60
+    mem_scale_in_cooldown      = 120
+    mem_scale_out_cooldown     = 120
   }
-  auto_scaler_config = merge(local.default_auto_scaler_config, var.auto_scaler_config)
 }
 
 resource "aws_appautoscaling_target" "ecs_service_target" {
