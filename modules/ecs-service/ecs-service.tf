@@ -123,7 +123,7 @@ resource "aws_lb_listener" "nlbListeners" {
   port              = var.networkLoadBalancerAttachments[count.index].lbPort
   protocol          = var.networkLoadBalancerAttachments[count.index].protocol
   certificate_arn   = lower(var.networkLoadBalancerAttachments[count.index].protocol)=="tcp"?null: var.networkLoadBalancerAttachments[count.index].certificateArn
-  alpn_policy       = lower(var.networkLoadBalancerAttachments[count.index].protocol)=="tls"?null: var.networkLoadBalancerAttachments[count.index].alpn_policy
+  alpn_policy       = var.networkLoadBalancerAttachments[count.index].alpn_policy
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.nlbTargetGroup[count.index].arn
