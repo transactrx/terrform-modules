@@ -10,18 +10,61 @@ variable "name" {
 variable "acm_certificate_arn" {
   type = string
 }
-variable "origin_request_policy_id" {
-  type = string
-}
-variable "cache_policy_id" {
-  type = string
-}
+
 variable "waf_protection_id" {
   type = string
 }
 
 variable "alb_arn" {
   type = string
+}
+
+# Origin Request Policy: Forward all headers, query strings, and cookies to the origin
+resource "aws_cloudfront_origin_request_policy" "all_policy" {
+  name = "ForwardAllPolicy${var.name}"
+
+  headers_config {
+    header_behavior = "allViewer"
+  }
+
+  query_strings_config {
+    query_string_behavior = "all"
+  }
+
+  cookies_config {
+    cookie_behavior = "all"
+  }
+}
+
+# Cache Policy: Define cache key parameters (even if caching is disabled)
+resource "aws_cloudfront_cache_policy" "forward_all" {
+  name        = "ForwardAllCachePolicy${var.name}"
+  comment     = "Cache policy that forwards all query strings, cookies, and headers"
+  default_ttl = 3
+  max_ttl     = 3
+  min_ttl     = 3
+
+  parameters_in_cache_key_and_forwarded_to_origin {
+    enable_accept_encoding_gzip   = true
+    enable_accept_encoding_brotli = true
+
+    headers_config {
+      header_behavior = "whitelist"
+      headers {
+        items = ["Authorization"] # Forward all headers
+      }
+    }
+
+
+
+    query_strings_config {
+      query_string_behavior = "all"
+    }
+
+    cookies_config {
+      cookie_behavior = "all"
+    }
+  }
 }
 
 
@@ -72,8 +115,8 @@ resource "aws_cloudfront_distribution" "proxy" {
     compress               = true # Optional but recommended
 
     # Attach both the cache policy and the origin request policy
-    cache_policy_id          = var.cache_policy_id
-    origin_request_policy_id = var.origin_request_policy_id
+    cache_policy_id          = aws_cloudfront_cache_policy.forward_all.id
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.all_policy.id
   }
 
   viewer_certificate {
