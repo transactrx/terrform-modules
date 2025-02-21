@@ -198,7 +198,7 @@ resource "aws_lb_listener_rule" "albListenerRule" {
   
   action {
     type             = "forward"
-    target_group_arn = aws_lb_target_group.albTargetGroup[count.index].arn
+    target_group_arn = aws_lb_target_group.albTargetGroup.arn
   }
 
   condition {
