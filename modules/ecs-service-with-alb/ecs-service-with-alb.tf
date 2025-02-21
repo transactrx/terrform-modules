@@ -195,12 +195,13 @@ resource "aws_lb_listener_rule" "albListenerRule" {
 
   # Use provided rulePriority or default to a unique value (starting at 100).
   priority = var.applicationLoadBalancerAttachment.rulePriority
-  
+
   action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.albTargetGroup.arn
   }
 
+  # Path pattern condition
   condition {
     path_pattern {
       values = [
@@ -208,6 +209,10 @@ resource "aws_lb_listener_rule" "albListenerRule" {
         var.applicationLoadBalancerAttachment.pathPattern : "/*"
       ]
     }
+  }
+
+  # Host header condition
+  condition {
     host_header {
       values = [
         var.applicationLoadBalancerAttachment.hostName
