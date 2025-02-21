@@ -113,7 +113,7 @@ data "aws_vpc" "vpc" {
 }
 
 locals {
-  containerPortToBeOpen = distinct(var.applicationLoadBalancerAttachment.containerPort)
+  containerPortToBeOpen = var.applicationLoadBalancerAttachment.containerPort
 }
 
 ###########################
