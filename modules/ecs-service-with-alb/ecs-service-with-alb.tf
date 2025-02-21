@@ -30,23 +30,24 @@ variable "vpc_id" {
   type = string
 }
 
-variable "applicationLoadBalancerAttachments" {
-  type = list(
-    object({
-      containerName   = string
-      containerPort   = number
-      protocol        = string
-      lbArn           = string
-      lbPort          = number
-      certificateArn  = optional(string)
-      name            = optional(string)
-      healthCheckPath = optional(string)
-      rulePriority    = optional(number)
-      pathPattern     = optional(string)
-      hostName        = string
-    })
-  )
-  default = [{
+variable "applicationLoadBalancerAttachment" {
+
+  type = object({
+    containerName   = string
+    containerPort   = number
+    protocol        = string
+    lbArn           = string
+    listenerArn    = string
+    lbPort          = number
+    certificateArn  = optional(string)
+    name            = optional(string)
+    healthCheckPath = optional(string)
+    rulePriority    = optional(number)
+    pathPattern     = optional(string)
+    hostName        = string
+  })
+
+  default = {
     containerName   = null,
     containerPort   = null,
     protocol        = null,
@@ -57,8 +58,9 @@ variable "applicationLoadBalancerAttachments" {
     healthCheckPath = null,
     rulePriority    = null,
     pathPattern     = null,
-    hostName        = null
-  }]
+    hostName        = null,
+    listenerArn = null
+  }
 }
 
 variable "alb_service_protocol" {
@@ -103,8 +105,7 @@ variable "auto_scaler_config" {
 ###########################
 
 data "aws_lb" "alb" {
-  count = length(var.applicationLoadBalancerAttachments)
-  arn   = var.applicationLoadBalancerAttachments[count.index].lbArn
+  arn = var.applicationLoadBalancerAttachment.lbArn
 }
 
 data "aws_vpc" "vpc" {
@@ -112,7 +113,7 @@ data "aws_vpc" "vpc" {
 }
 
 locals {
-  containerPortsToBeOpen = distinct(var.applicationLoadBalancerAttachments.*.containerPort)
+  containerPortToBeOpen = distinct(var.applicationLoadBalancerAttachment.containerPort)
 }
 
 ###########################
@@ -133,11 +134,11 @@ resource "aws_security_group" "serviceSg" {
 }
 
 resource "aws_security_group_rule" "sgRules" {
-  count             = length(local.containerPortsToBeOpen)
-  from_port         = local.containerPortsToBeOpen[count.index]
+  
+  from_port         = local.containerPortToBeOpen
   protocol          = "TCP"
   security_group_id = aws_security_group.serviceSg.id
-  to_port           = local.containerPortsToBeOpen[count.index]
+  to_port           = local.containerPortToBeOpen
   type              = "ingress"
   cidr_blocks       = [data.aws_vpc.vpc.cidr_block]
   description       = "Allow traffic from within VPC"
@@ -148,19 +149,19 @@ resource "aws_security_group_rule" "sgRules" {
 ###########################
 
 resource "aws_lb_target_group" "albTargetGroup" {
-  count       = length(var.applicationLoadBalancerAttachments)
+  
   protocol    = var.alb_service_protocol
   target_type = "ip"
-  name        = (var.applicationLoadBalancerAttachments[count.index].name != null ?
-                "${var.serviceName}-${var.applicationLoadBalancerAttachments[count.index].name}" :
-                "${var.serviceName}-${var.applicationLoadBalancerAttachments[count.index].containerName}-${var.applicationLoadBalancerAttachments[count.index].containerPort}")
+  name = (var.applicationLoadBalancerAttachment.name != null ?
+    "${var.serviceName}-${var.applicationLoadBalancerAttachment.name}" :
+  "${var.serviceName}-${var.applicationLoadBalancerAttachment.containerName}-${var.applicationLoadBalancerAttachment.containerPort}")
   deregistration_delay = 120
-  port                 = var.applicationLoadBalancerAttachments[count.index].containerPort
+  port                 = var.applicationLoadBalancerAttachment.containerPort
 
   health_check {
-    protocol            = var.alb_service_protocol
-    path                = (var.applicationLoadBalancerAttachments[count.index].healthCheckPath != null ?
-                          var.applicationLoadBalancerAttachments[count.index].healthCheckPath : "/")
+    protocol = var.alb_service_protocol
+    path = (var.applicationLoadBalancerAttachment.healthCheckPath != null ?
+    var.applicationLoadBalancerAttachment.healthCheckPath : "/")
     healthy_threshold   = 5
     unhealthy_threshold = 5
     matcher             = "200-399"
@@ -174,29 +175,27 @@ resource "aws_lb_target_group" "albTargetGroup" {
 # ALB Listeners and Rules
 ###########################
 
-resource "aws_lb_listener" "albListeners" {
-  count             = length(var.applicationLoadBalancerAttachments)
-  load_balancer_arn = var.applicationLoadBalancerAttachments[count.index].lbArn
-  port              = var.applicationLoadBalancerAttachments[count.index].lbPort
-  protocol          = var.applicationLoadBalancerAttachments[count.index].protocol
+# resource "aws_lb_listener" "albListeners" {
+#   count             = length(var.applicationLoadBalancerAttachments)
+#   load_balancer_arn = var.applicationLoadBalancerAttachments[count.index].lbArn
+#   port              = var.applicationLoadBalancerAttachments[count.index].lbPort
+#   protocol          = var.applicationLoadBalancerAttachments[count.index].protocol
 
-  certificate_arn   = (lower(var.applicationLoadBalancerAttachments[count.index].protocol) == "https" ?
-                      var.applicationLoadBalancerAttachments[count.index].certificateArn : null)
+#   certificate_arn   = (lower(var.applicationLoadBalancerAttachments[count.index].protocol) == "https" ?
+#                       var.applicationLoadBalancerAttachments[count.index].certificateArn : null)
 
-  default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.albTargetGroup[count.index].arn
-  }
-}
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.albTargetGroup[count.index].arn
+#   }
+# }
 
 resource "aws_lb_listener_rule" "albListenerRule" {
-  count        = length(var.applicationLoadBalancerAttachments)
-  listener_arn = aws_lb_listener.albListeners[count.index].arn
+  listener_arn = var.applicationLoadBalancerAttachment.listenerArn
 
   # Use provided rulePriority or default to a unique value (starting at 100).
-  priority = (var.applicationLoadBalancerAttachments[count.index].rulePriority != null ?
-             var.applicationLoadBalancerAttachments[count.index].rulePriority : count.index + 100)
-
+  priority = var.applicationLoadBalancerAttachment.rulePriority
+  
   action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.albTargetGroup[count.index].arn
@@ -205,13 +204,13 @@ resource "aws_lb_listener_rule" "albListenerRule" {
   condition {
     path_pattern {
       values = [
-        var.applicationLoadBalancerAttachments[count.index].pathPattern != null ?
-        var.applicationLoadBalancerAttachments[count.index].pathPattern : "/*"
+        var.applicationLoadBalancerAttachment.pathPattern != null ?
+        var.applicationLoadBalancerAttachment.pathPattern : "/*"
       ]
     }
     host_header {
       values = [
-        var.applicationLoadBalancerAttachments[count.index].hostName
+        var.applicationLoadBalancerAttachment.hostName
       ]
     }
   }
@@ -231,9 +230,9 @@ resource "aws_ecs_service" "ecs_service" {
   dynamic "load_balancer" {
     for_each = aws_lb_target_group.albTargetGroup
     content {
-      container_name   = var.applicationLoadBalancerAttachments[load_balancer.key].containerName
-      container_port   = var.applicationLoadBalancerAttachments[load_balancer.key].containerPort
-      target_group_arn = aws_lb_target_group.albTargetGroup[load_balancer.key].arn
+      container_name   = var.applicationLoadBalancerAttachment.containerName
+      container_port   = var.applicationLoadBalancerAttachment.containerPort
+      target_group_arn = aws_lb_target_group.albTargetGroup.arn
     }
   }
 
