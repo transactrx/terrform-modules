@@ -57,6 +57,7 @@ variable "applicationLoadBalancerAttachments" {
     healthCheckPath = null,
     rulePriority    = null,
     pathPattern     = null,
+    hostName        = null
   }]
 }
 
