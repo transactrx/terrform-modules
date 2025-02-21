@@ -149,16 +149,16 @@ resource "aws_lb_target_group" "albTargetGroup" {
   count       = length(var.applicationLoadBalancerAttachments)
   protocol    = var.alb_service_protocol
   target_type = "ip"
-  name        = var.applicationLoadBalancerAttachments[count.index].name != null ?
+  name        = (var.applicationLoadBalancerAttachments[count.index].name != null ?
                 "${var.serviceName}-${var.applicationLoadBalancerAttachments[count.index].name}" :
-                "${var.serviceName}-${var.applicationLoadBalancerAttachments[count.index].containerName}-${var.applicationLoadBalancerAttachments[count.index].containerPort}"
+                "${var.serviceName}-${var.applicationLoadBalancerAttachments[count.index].containerName}-${var.applicationLoadBalancerAttachments[count.index].containerPort}")
   deregistration_delay = 120
   port                 = var.applicationLoadBalancerAttachments[count.index].containerPort
 
   health_check {
     protocol            = var.alb_service_protocol
-    path                = var.applicationLoadBalancerAttachments[count.index].healthCheckPath != null ?
-                          var.applicationLoadBalancerAttachments[count.index].healthCheckPath : "/"
+    path                = (var.applicationLoadBalancerAttachments[count.index].healthCheckPath != null ?
+                          var.applicationLoadBalancerAttachments[count.index].healthCheckPath : "/")
     healthy_threshold   = 5
     unhealthy_threshold = 5
     matcher             = "200-399"
@@ -178,8 +178,8 @@ resource "aws_lb_listener" "albListeners" {
   port              = var.applicationLoadBalancerAttachments[count.index].lbPort
   protocol          = var.applicationLoadBalancerAttachments[count.index].protocol
 
-  certificate_arn   = lower(var.applicationLoadBalancerAttachments[count.index].protocol) == "https" ?
-                      var.applicationLoadBalancerAttachments[count.index].certificateArn : null
+  certificate_arn   = (lower(var.applicationLoadBalancerAttachments[count.index].protocol) == "https" ?
+                      var.applicationLoadBalancerAttachments[count.index].certificateArn : null)
 
   default_action {
     type             = "forward"
@@ -192,8 +192,8 @@ resource "aws_lb_listener_rule" "albListenerRule" {
   listener_arn = aws_lb_listener.albListeners[count.index].arn
 
   # Use provided rulePriority or default to a unique value (starting at 100).
-  priority = var.applicationLoadBalancerAttachments[count.index].rulePriority != null ?
-             var.applicationLoadBalancerAttachments[count.index].rulePriority : count.index + 100
+  priority = (var.applicationLoadBalancerAttachments[count.index].rulePriority != null ?
+             var.applicationLoadBalancerAttachments[count.index].rulePriority : count.index + 100)
 
   action {
     type             = "forward"
