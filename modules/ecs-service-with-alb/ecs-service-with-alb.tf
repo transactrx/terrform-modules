@@ -43,6 +43,7 @@ variable "applicationLoadBalancerAttachments" {
       healthCheckPath = optional(string)
       rulePriority    = optional(number)
       pathPattern     = optional(string)
+      hostName        = string
     })
   )
   default = [{
@@ -205,6 +206,11 @@ resource "aws_lb_listener_rule" "albListenerRule" {
       values = [
         var.applicationLoadBalancerAttachments[count.index].pathPattern != null ?
         var.applicationLoadBalancerAttachments[count.index].pathPattern : "/*"
+      ]
+    }
+    host_header {
+      values = [
+        var.applicationLoadBalancerAttachments[count.index].hostName
       ]
     }
   }
