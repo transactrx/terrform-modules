@@ -34,11 +34,6 @@ variable "dns_name" {
   type = string
 }
 
-variable "dns_name" {
-  description = "The FQDN for the ALB record (e.g. app.example.com)"
-  type        = string
-}
-
 locals {
   # Split the FQDN into parts, then join the last two segments as the zone name.
   dns_parts = split(".", var.dns_name)
