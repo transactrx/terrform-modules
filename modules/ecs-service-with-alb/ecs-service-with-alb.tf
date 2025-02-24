@@ -137,9 +137,7 @@ variable "auto_scaler_config" {
 # Data Sources and Locals
 ###########################
 
-data "aws_lb" "alb" {
-  arn = var.applicationLoadBalancerAttachment.lbArn
-}
+
 
 data "aws_vpc" "vpc" {
   id = var.vpc_id
