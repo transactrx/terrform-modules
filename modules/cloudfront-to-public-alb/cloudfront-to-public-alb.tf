@@ -79,10 +79,10 @@ resource "aws_cloudfront_distribution" "proxy" {
       origin_keepalive_timeout = 5  # Optional but recommended
       origin_read_timeout      = 30 # Optional but recommended
     }
-    
-    
+
+
   }
-  
+
 
   aliases = [var.public_dns_name]
 
@@ -119,6 +119,35 @@ resource "aws_cloudfront_distribution" "proxy" {
 
   web_acl_id = var.waf_protection_id
 }
+
+# add cloudfront domain name to route53
+
+locals {
+  # Split the FQDN into parts, then join the last two segments as the zone name.
+  dns_parts = split(".", var.public_dns_name)
+  zone_name = join(".", slice(local.dns_parts, length(local.dns_parts) - 2, length(local.dns_parts)))
+  hostname  = local.dns_parts[0]
+}
+
+data "aws_route53_zone" "public" {
+  name         = local.zone_name
+  private_zone = false
+}
+
+#register the dns name
+resource "aws_route53_record" "cf_alias" {
+  zone_id = data.aws_route53_zone.public.zone_id
+  name    = local.hostname # e.g., "www.example.com"
+  type    = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.proxy.domain_name
+    zone_id                = aws_cloudfront_distribution.proxy.hosted_zone_id
+    evaluate_target_health = false
+
+  }
+}
+
 
 output "domain_name" {
   value = aws_cloudfront_distribution.proxy.domain_name
