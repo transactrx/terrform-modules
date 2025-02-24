@@ -30,6 +30,44 @@ variable "vpc_id" {
   type = string
 }
 
+variable "dns_name" {
+  type = string
+}
+
+variable "dns_name" {
+  description = "The FQDN for the ALB record (e.g. app.example.com)"
+  type        = string
+}
+
+locals {
+  # Split the FQDN into parts, then join the last two segments as the zone name.
+  dns_parts = split(".", var.dns_name)
+  zone_name = join(".", slice(local.dns_parts, length(local.dns_parts) - 2, length(local.dns_parts)))
+}
+
+data "aws_route53_zone" "public" {
+  name         = local.zone_name
+  private_zone = false
+}
+
+data "aws_lb" "alb" {
+  arn = var.applicationLoadBalancerAttachment.lbArn
+}
+
+resource "aws_route53_record" "app_dns" {
+  zone_id = data.aws_route53_zone.public.zone_id
+  name    = var.dns_name
+  type    = "A"
+
+  alias {
+    name                   = data.alb.dns_name
+    zone_id                = data.alb.zone_id
+    evaluate_target_health = false
+  }
+}
+
+
+
 variable "applicationLoadBalancerAttachment" {
 
   type = object({
@@ -37,7 +75,7 @@ variable "applicationLoadBalancerAttachment" {
     containerPort   = number
     protocol        = string
     lbArn           = string
-    listenerArn    = string
+    listenerArn     = string
     lbPort          = number
     certificateArn  = optional(string)
     name            = optional(string)
@@ -59,7 +97,7 @@ variable "applicationLoadBalancerAttachment" {
     rulePriority    = null,
     pathPattern     = null,
     hostName        = null,
-    listenerArn = null
+    listenerArn     = null
   }
 }
 
@@ -134,7 +172,7 @@ resource "aws_security_group" "serviceSg" {
 }
 
 resource "aws_security_group_rule" "sgRules" {
-  
+
   from_port         = local.containerPortToBeOpen
   protocol          = "TCP"
   security_group_id = aws_security_group.serviceSg.id
@@ -149,7 +187,7 @@ resource "aws_security_group_rule" "sgRules" {
 ###########################
 
 resource "aws_lb_target_group" "albTargetGroup" {
-  
+
   protocol    = var.alb_service_protocol
   target_type = "ip"
   name = (var.applicationLoadBalancerAttachment.name != null ?

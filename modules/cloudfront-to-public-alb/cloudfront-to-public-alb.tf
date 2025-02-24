@@ -79,7 +79,10 @@ resource "aws_cloudfront_distribution" "proxy" {
       origin_keepalive_timeout = 5  # Optional but recommended
       origin_read_timeout      = 30 # Optional but recommended
     }
+    
+    
   }
+  
 
   aliases = [var.public_dns_name]
 
