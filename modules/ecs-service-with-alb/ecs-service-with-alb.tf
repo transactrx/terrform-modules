@@ -30,13 +30,13 @@ variable "vpc_id" {
   type = string
 }
 
-variable "dns_name" {
+variable "dnsName" {
   type = string
 }
 
 locals {
   # Split the FQDN into parts, then join the last two segments as the zone name.
-  dns_parts = split(".", var.dns_name)
+  dns_parts = split(".", var.dnsName)
   zone_name = join(".", slice(local.dns_parts, length(local.dns_parts) - 2, length(local.dns_parts)))
 }
 
@@ -51,7 +51,7 @@ data "aws_lb" "alb" {
 
 resource "aws_route53_record" "app_dns" {
   zone_id = data.aws_route53_zone.public.zone_id
-  name    = var.dns_name
+  name    = var.dnsName
   type    = "A"
 
   alias {
