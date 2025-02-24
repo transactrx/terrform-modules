@@ -77,7 +77,7 @@ variable "applicationLoadBalancerAttachment" {
     healthCheckPath = optional(string)
     rulePriority    = optional(number)
     pathPattern     = optional(string)
-    hostName        = string
+    publicHostName        = string
   })
 
   default = {
@@ -91,7 +91,7 @@ variable "applicationLoadBalancerAttachment" {
     healthCheckPath = null,
     rulePriority    = null,
     pathPattern     = null,
-    hostName        = null,
+    publicHostName        = null,
     listenerArn     = null
   }
 }
@@ -246,7 +246,7 @@ resource "aws_lb_listener_rule" "albListenerRule" {
   condition {
     host_header {
       values = [
-        var.applicationLoadBalancerAttachment.hostName
+        var.applicationLoadBalancerAttachment.publicHostName
       ]
     }
   }
