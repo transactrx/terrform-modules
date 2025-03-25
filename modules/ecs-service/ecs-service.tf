@@ -228,7 +228,7 @@ resource "aws_appautoscaling_policy" "ecs_memory_scaling_policy" {
     predefined_metric_specification {
       predefined_metric_type = "ECSServiceAverageMemoryUtilization"
     }
-    target_value       = var.auto_scaler_config.mem_scale_in_target_value
+    target_value       = var.auto_scaler_config.mem_scale_out_target_value
     scale_in_cooldown  = var.auto_scaler_config.mem_scale_in_cooldown
     scale_out_cooldown = var.auto_scaler_config.mem_scale_out_cooldown
   }
