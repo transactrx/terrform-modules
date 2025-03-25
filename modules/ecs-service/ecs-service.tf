@@ -94,6 +94,7 @@ variable "networkLoadBalancerAttachments" {
     certificateArn  = optional(string)
     name            = optional(string)
     healthCheckPort = optional(number)
+    alpn_policy     = optional(string)
   }))
   default = [{
     containerName   = null
@@ -104,6 +105,7 @@ variable "networkLoadBalancerAttachments" {
     certificateArn  = null
     name            = null
     healthCheckPort = null
+    alpn_policy     = null
   }]
 }
 
@@ -120,7 +122,8 @@ resource "aws_lb_listener" "nlbListeners" {
   load_balancer_arn = var.networkLoadBalancerAttachments[count.index].lbArn
   port              = var.networkLoadBalancerAttachments[count.index].lbPort
   protocol          = var.networkLoadBalancerAttachments[count.index].protocol
-  certificate_arn = lower(var.networkLoadBalancerAttachments[count.index].protocol)=="tcp"?null: var.networkLoadBalancerAttachments[count.index].certificateArn
+  certificate_arn   = lower(var.networkLoadBalancerAttachments[count.index].protocol)=="tcp"?null: var.networkLoadBalancerAttachments[count.index].certificateArn
+  alpn_policy       = var.networkLoadBalancerAttachments[count.index].alpn_policy
   default_action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.nlbTargetGroup[count.index].arn
