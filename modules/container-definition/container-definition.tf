@@ -64,6 +64,14 @@ locals {
     environment  = var.envVariables
     portMappings = var.portMappings
     secrets      = var.secrets
+
+    ulimits = [
+      {
+        name      = "nofile"
+        softLimit = 1048576
+        hardLimit = 1048576
+      }
+    ]
   }
 }
 
