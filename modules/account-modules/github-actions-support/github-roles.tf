@@ -23,7 +23,7 @@ data "aws_iam_policy_document" "github_actions_assume_role" {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
-        "repo:transactrx/*:${var.branch_name}"
+        "repo:transactrx/*:${var.branch_name}*"
       ]
     }
   }
