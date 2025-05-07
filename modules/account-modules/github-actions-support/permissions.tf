@@ -324,3 +324,44 @@ resource "aws_iam_role_policy" "allow-route53-permissions" {
   policy = data.aws_iam_policy_document.allow-route53-permissions.json
   role   = aws_iam_role.github_actions.name
 }
+
+data "aws_iam_policy_document" "allow-cognito-permissions" {
+  version = "2012-10-17"
+
+  statement {
+    effect = "Allow"
+    actions = [
+      # User pool management
+      "cognito-idp:CreateUserPool",
+      "cognito-idp:DeleteUserPool",
+      "cognito-idp:UpdateUserPool",
+      "cognito-idp:DescribeUserPool",
+      "cognito-idp:ListUserPools",
+      "cognito-idp:GetUserPoolMfaConfig",
+
+      # User pool client
+      "cognito-idp:CreateUserPoolClient",
+      "cognito-idp:DeleteUserPoolClient",
+      "cognito-idp:UpdateUserPoolClient",
+      "cognito-idp:DescribeUserPoolClient",
+
+      # Identity provider (e.g. SAML or OIDC)
+      "cognito-idp:CreateIdentityProvider",
+      "cognito-idp:UpdateIdentityProvider",
+      "cognito-idp:DeleteIdentityProvider",
+      "cognito-idp:DescribeIdentityProvider",
+
+      # User pool domain
+      "cognito-idp:CreateUserPoolDomain",
+      "cognito-idp:DeleteUserPoolDomain",
+      "cognito-idp:DescribeUserPoolDomain"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "allow-cognito-permissions" {
+  name   = "allow-cognito-permissions"
+  role   = aws_iam_role.github_actions.name
+  policy = data.aws_iam_policy_document.allow-cognito-permissions.json
+}
