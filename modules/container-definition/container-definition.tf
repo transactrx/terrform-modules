@@ -43,6 +43,10 @@ variable "logGroup" {
   type    = string
   default = ""
 }
+variable "logIsBlocking" {
+  type = bool
+  default = false
+}
 data "aws_region" "current" {}
 
 
@@ -59,6 +63,7 @@ locals {
         awslogs-group         = var.logGroup
         awslogs-region        = data.aws_region.current.name
         awslogs-stream-prefix = var.containerName
+        mode = var.logIsBlocking ? "blocking":"non-blocking"
       }
     }
     environment  = var.envVariables
