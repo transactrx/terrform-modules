@@ -19,6 +19,14 @@ variable "cache_policy_id" {
 variable "waf_protection_arn" {
   type = string
 }
+variable "origin_read_timeout" {
+  type = number
+  default = 30
+}
+variable "origin_keepalive_timeout" {
+  type = number
+  default = 5
+}
 
 # CloudFront Distribution using the new policies
 # The `resource "aws_cloudfront_distribution" "proxy"` block is defining an AWS CloudFront distribution resource named "proxy".
@@ -33,8 +41,8 @@ resource "aws_cloudfront_distribution" "proxy" {
       https_port               = 443
       origin_protocol_policy   = "https-only"
       origin_ssl_protocols     = ["TLSv1.2"]
-      origin_keepalive_timeout = 5  # Optional but recommended
-      origin_read_timeout      = 30 # Optional but recommended
+      origin_keepalive_timeout = var.origin_keepalive_timeout
+      origin_read_timeout      = var.origin_read_timeout
     }
   }
 
