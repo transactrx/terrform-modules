@@ -4,7 +4,7 @@ resource "aws_ecs_task_definition" "service" {
   container_definitions = jsonencode([
     {
       name      = var.name
-      image     = "twingate/connector:1.73.0"
+      image     = "twingate/connector:1"
       cpu       = 512
       memory    = 512
       essential = true
