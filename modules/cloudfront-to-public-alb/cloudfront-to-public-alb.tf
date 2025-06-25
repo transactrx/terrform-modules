@@ -74,7 +74,7 @@ resource "aws_cloudfront_distribution" "proxy" {
     custom_origin_config {
       http_port                = 80
       https_port               = 443
-      origin_protocol_policy   = "https-only"
+      origin_protocol_policy   = "match-viewer"
       origin_ssl_protocols     = ["TLSv1.2"]
       origin_keepalive_timeout = 5  # Optional but recommended
       origin_read_timeout      = 30 # Optional but recommended
@@ -88,7 +88,7 @@ resource "aws_cloudfront_distribution" "proxy" {
 
   enabled             = true
   is_ipv6_enabled     = true
-  default_root_object = "/" # Optional: Remove if not needed
+  # default_root_object removed to prevent redirect loops with dynamic applications
 
   default_cache_behavior {
     target_origin_id       = var.name
