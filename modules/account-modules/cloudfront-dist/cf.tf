@@ -56,8 +56,7 @@ resource "aws_cloudfront_distribution" "proxy" {
   default_root_object = "/" # Optional: Remove if not needed
 
   default_cache_behavior {
-    # Choose the first element as the default origin
-    target_origin_id       = var.desitination_domain[0]
+    target_origin_id       = var.name
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["HEAD", "DELETE", "POST", "GET", "OPTIONS", "PUT", "PATCH"]
     cached_methods         = ["GET", "HEAD", "OPTIONS"]
