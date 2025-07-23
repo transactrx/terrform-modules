@@ -1,5 +1,5 @@
 variable "desitination_domain" {
-  type = list(string)
+  type = string
 }
 variable "public_dns_name" {
   type = string
@@ -32,20 +32,17 @@ variable "origin_keepalive_timeout" {
 # The `resource "aws_cloudfront_distribution" "proxy"` block is defining an AWS CloudFront distribution resource named "proxy".
 # This resource configuration specifies the settings for a CloudFront distribution, including the origin server configuration, aliases (alternate domain names), cache behaviors, SSL certificate, restrictions, and other properties.
 resource "aws_cloudfront_distribution" "proxy" {
-  dynamic "origin" {
-    for_each = var.desitination_domain
-    content {
-      domain_name = origin.value
-      origin_id   = origin.value
+  origin {
+    domain_name = var.desitination_domain # Fixed typo: "desitination_domain" -> "destination_domain"
+    origin_id   = var.name
 
-      custom_origin_config {
-        http_port                = 80
-        https_port               = 443
-        origin_protocol_policy   = "https-only"
-        origin_ssl_protocols     = ["TLSv1.2"]
-        origin_keepalive_timeout = var.origin_keepalive_timeout
-        origin_read_timeout      = var.origin_read_timeout
-      }
+    custom_origin_config {
+      http_port                = 80
+      https_port               = 443
+      origin_protocol_policy   = "https-only"
+      origin_ssl_protocols     = ["TLSv1.2"]
+      origin_keepalive_timeout = var.origin_keepalive_timeout
+      origin_read_timeout      = var.origin_read_timeout
     }
   }
 
