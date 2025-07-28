@@ -1,13 +1,16 @@
 variable "ContainerList" {
 }
+
 variable "Os" {
   type    = string
   default = "LINUX"
 }
+
 variable "CPU_Arch" {
   type    = string
   default = "X86_64"
 }
+
 variable "CPU" {
   type = number
 }
@@ -17,6 +20,7 @@ variable "Memory" {
 }
 
 variable "taskDefFamily" {}
+
 variable "mainImageURL" {
   type = string
 }
@@ -26,9 +30,21 @@ variable "addExtraFargateStorage" {
   default = false
 }
 
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name = "${var.taskDefFamily}-ecs-execution-role"
+variable "ecs_execution_role_name" {
+  description = "Override for ECS Task Execution Role name"
+  type        = string
+  default     = null
+}
 
+variable "ecs_task_role_name" {
+  description = "Override for ECS Task Execution Role name"
+  type        = string
+  default     = null
+}
+
+
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name = var.ecs_execution_role_name != null ? var.ecs_execution_role_name : "${var.taskDefFamily}-ecs-execution-role"
   assume_role_policy = <<EOF
 {
  "Version": "2012-10-17",
@@ -44,12 +60,10 @@ resource "aws_iam_role" "ecs_task_execution_role" {
  ]
 }
 EOF
-
 }
 
 resource "aws_iam_role" "ecs_task_role" {
-
-  name               = "${var.taskDefFamily}-ecs-task-role"
+  name = var.ecs_task_role_name != null ? var.ecs_task_role_name : "${var.taskDefFamily}-ecs-task-role"
   assume_role_policy = <<EOF
 {
  "Version": "2012-10-17",
@@ -65,9 +79,7 @@ resource "aws_iam_role" "ecs_task_role" {
  ]
 }
 EOF
-
 }
-
 
 resource "aws_iam_role_policy" "secretsAccess" {
   policy = <<EOF
@@ -110,7 +122,6 @@ EOF
   role   = aws_iam_role.ecs_task_execution_role.name
 }
 
-
 resource "aws_ecs_task_definition" "test" {
   family                   = var.taskDefFamily
   requires_compatibilities = ["FARGATE"]
@@ -133,15 +144,17 @@ resource "aws_ecs_task_definition" "test" {
       size_in_gib = 200
     }
   }
-
 }
+
 
 output "taskDefArn" {
   value = aws_ecs_task_definition.test.arn
 }
+
 output "task_role_arn" {
   value = aws_iam_role.ecs_task_role.arn
 }
+
 output "task_role_name" {
   value = aws_iam_role.ecs_task_role.name
 }
@@ -149,9 +162,11 @@ output "task_role_name" {
 output "execution_role_arn" {
   value = aws_iam_role.ecs_task_execution_role.arn
 }
+
 output "execution_role_name" {
   value = aws_iam_role.ecs_task_execution_role.name
 }
+
 output "task_definition_full_path" {
   value = "${aws_ecs_task_definition.test.family}:${aws_ecs_task_definition.test.revision}"
 }
