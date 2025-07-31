@@ -46,7 +46,7 @@ resource "aws_ecs_service" "pwl-tcp-server-test-ecs-service" {
   }
   lifecycle {
     ignore_changes = [
-      "capacity_provider_strategy"
+      capacity_provider_strategy
     ]
   }
 }
