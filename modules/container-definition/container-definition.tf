@@ -61,7 +61,7 @@ locals {
       logDriver = "awslogs"
       options   = {
         awslogs-group         = var.logGroup
-        awslogs-region        = data.aws_region.current.name
+        awslogs-region        = data.aws_region.current.region
         awslogs-stream-prefix = var.containerName
         mode = var.logIsBlocking ? "blocking":"non-blocking"
       }
