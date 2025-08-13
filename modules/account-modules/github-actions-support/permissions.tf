@@ -1,5 +1,3 @@
-
-
 data "aws_iam_policy_document" "allow_ecr_actions" {
   version = "2012-10-17"
   statement {
@@ -11,14 +9,11 @@ data "aws_iam_policy_document" "allow_ecr_actions" {
   }
 }
 
-
-
 resource "aws_iam_role_policy" "allow_ecr_actions" {
   name   = "allow_ecr_actions"
   role   = aws_iam_role.github_actions.name
   policy = data.aws_iam_policy_document.allow_ecr_actions.json
 }
-
 
 data "aws_iam_policy_document" "allow_ecs_actions" {
   version = "2012-10-17"
@@ -58,7 +53,6 @@ resource "aws_iam_role_policy" "allow_autoscaling_config" {
   role   = aws_iam_role.github_actions.name
 }
 
-
 data "aws_iam_policy_document" "allow_ssm_params_actions" {
   version = "2012-10-17"
   statement {
@@ -76,7 +70,6 @@ resource "aws_iam_role_policy" "allow_ssm_params_actions" {
   role   = aws_iam_role.github_actions.name
   policy = data.aws_iam_policy_document.allow_ssm_params_actions.json
 }
-
 
 data "aws_iam_policy_document" "allow_ec2_actions" {
   version = "2012-10-17"
@@ -97,7 +90,6 @@ resource "aws_iam_role_policy" "allow_ec2_actions" {
   role   = aws_iam_role.github_actions.name
   policy = data.aws_iam_policy_document.allow_ec2_actions.json
 }
-
 
 data "aws_iam_policy_document" "allow_cloudwatch_logs_actions" {
   version = "2012-10-17"
@@ -224,7 +216,6 @@ resource "aws_iam_role_policy" "allow-nlb-attachment" {
   role   = aws_iam_role.github_actions.name
 }
 
-
 data "aws_iam_policy_document" "allow_route53_record_changes" {
   version = "2012-10-17"
   statement {
@@ -274,7 +265,6 @@ resource "aws_iam_role_policy" "allow_full_sns_permissions" {
   policy = data.aws_iam_policy_document.allow-full-sns-permissions.json
   role   = aws_iam_role.github_actions.name
 }
-
 
 //give github access to cloudfront
 data "aws_iam_policy_document" "allow-cloudfront-permissions" {
