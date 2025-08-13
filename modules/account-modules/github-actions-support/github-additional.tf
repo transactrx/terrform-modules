@@ -1,9 +1,3 @@
-variable "private-subnet-ids" {
-  type = string
-}
-variable "vpc-id" {
-  type = string
-}
 resource "aws_ssm_parameter" "private-subnet-ids" {
   name  = "private-subnet-ids"
   type  = "String"
