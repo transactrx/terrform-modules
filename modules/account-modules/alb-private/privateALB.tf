@@ -132,11 +132,10 @@ resource "aws_lb_listener_rule" "redirectToOldUrl" {
 # Strip empties and normalize to a set(string)
 locals {
   normalized_additional = toset([
-    for s in var.additionalCerts : trim(s)
-    if trim(s) != ""
+    for s in var.additionalCerts : s
+    if s != null && s != ""
   ])
 
-  # Remove the primary if it accidentally appears in the additional list
   sni_certs = setsubtract(
     local.normalized_additional,
     toset([var.publicCertificate])
