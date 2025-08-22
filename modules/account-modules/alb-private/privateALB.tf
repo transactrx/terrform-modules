@@ -16,8 +16,8 @@ variable "publicCertificate" {
 }
 
 variable "additionalCerts" {
+  type    = set(string)
   default = []
-  type = list(string)
 }
 variable "publicDomain" {
   type = string
@@ -129,15 +129,25 @@ resource "aws_lb_listener_rule" "redirectToOldUrl" {
   }
 }
 
+# Strip empties and normalize to a set(string)
 locals {
-  sni_certs = setsubtract(compact(toset(var.additionalCerts)), toset([var.additionalCerts]))
+  normalized_additional = toset([
+    for s in var.additionalCerts : trim(s)
+    if trim(s) != ""
+  ])
+
+  # Remove the primary if it accidentally appears in the additional list
+  sni_certs = setsubtract(
+    local.normalized_additional,
+    toset([var.publicCertificate])
+  )
 }
 
 # Attach all extra/SNI certs
 resource "aws_lb_listener_certificate" "additionalCerts" {
-  for_each       = local.sni_certs
-  listener_arn   = aws_alb_listener.defaultListener.arn
-  certificate_arn = each.key
+  for_each        = local.sni_certs
+  listener_arn    = aws_alb_listener.defaultListener.arn
+  certificate_arn = each.key   # (each.key == each.value for sets)
 }
 
 output "privateSubnets" {
