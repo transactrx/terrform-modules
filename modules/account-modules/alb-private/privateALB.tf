@@ -5,7 +5,6 @@ variable "albName" {
   type = string
 }
 
-variable "envObject" {}
 variable "privateZoneId" {}
 
 variable "privateSubnets" {
@@ -28,6 +27,15 @@ variable "additionalCerts" {
   default = []
   type = list(string)
 }
+variable "publicDomain" {
+  type = string
+}
+variable "publicDomainNaked" {
+  type = string
+}
+variable "corpDomain" {
+  type = string
+}
 
 resource "aws_security_group" "ALBSecurityGroup" {
   name = var.albName
@@ -48,7 +56,7 @@ resource "aws_security_group" "ALBSecurityGroup" {
 }
 
 resource "aws_route53_record" "privateHostRecord" {
-  name = split(",",var.envObject.publicDomain)[0]
+  name = var.publicDomain
   type = "CNAME"
   zone_id = var.privateZoneId
   ttl     = "300"
@@ -98,7 +106,7 @@ resource "aws_lb_listener_rule" "redirectToEnrollment" {
     redirect {
       port        = "443"
       protocol    = "HTTPS"
-      host = "www.${var.envObject.corpDomain}"
+      host = "www.${var.corpDomain}"
       path = "/enrollment"
       status_code = "HTTP_301"
       query = ""
@@ -120,7 +128,7 @@ resource "aws_lb_listener_rule" "redirectToOldUrl" {
     redirect {
       port        = "443"
       protocol    = "HTTPS"
-      host = "www.${var.envObject.publicDomainNaked}"
+      host = "www.${var.publicDomainNaked}"
       path = "/"
       status_code = "HTTP_301"
       query = ""
