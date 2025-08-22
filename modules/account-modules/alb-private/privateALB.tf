@@ -14,15 +14,7 @@ variable "privateSubnets" {
 variable "publicCertificate" {
   type = string
 }
-variable "publicCertificate2" {
-  type = string
-}
-variable "publicCertificate3" {
-  type = string
-}
-variable "publicCertificate4" {
-  type = string
-}
+
 variable "additionalCerts" {
   default = []
   type = list(string)
@@ -137,23 +129,15 @@ resource "aws_lb_listener_rule" "redirectToOldUrl" {
   }
 }
 
-resource "aws_lb_listener_certificate" "cert2" {
-  certificate_arn = var.publicCertificate2
-  listener_arn = aws_alb_listener.defaultListener.arn
-}
-resource "aws_lb_listener_certificate" "cert3" {
-  certificate_arn = var.publicCertificate3
-  listener_arn = aws_alb_listener.defaultListener.arn
-}
-resource "aws_lb_listener_certificate" "cert4" {
-  certificate_arn = var.publicCertificate4
-  listener_arn = aws_alb_listener.defaultListener.arn
+locals {
+  sni_certs = setsubtract(compact(toset(var.additionalCerts)), toset([var.additionalCerts]))
 }
 
+# Attach all extra/SNI certs
 resource "aws_lb_listener_certificate" "additionalCerts" {
-  count = length(var.additionalCerts)
-  certificate_arn = var.additionalCerts[count.index]
-  listener_arn = aws_alb_listener.defaultListener.arn
+  for_each       = local.sni_certs
+  listener_arn   = aws_alb_listener.defaultListener.arn
+  certificate_arn = each.key
 }
 
 output "privateSubnets" {
