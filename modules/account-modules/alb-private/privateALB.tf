@@ -63,16 +63,12 @@ resource "aws_route53_record" "privateHostRecord" {
   records = [aws_lb.alb.dns_name]
 }
 
-locals {
-  privateSubnets=split(",",var.privateSubnets)
-}
-
 resource "aws_lb" "alb" {
   name               = var.albName
   internal           = true
   load_balancer_type = "application"
   security_groups    = [aws_security_group.ALBSecurityGroup.id]
-  subnets            = local.privateSubnets
+  subnets            = var.privateSubnets
   idle_timeout = 600
   enable_deletion_protection = true
   tags = {
@@ -161,7 +157,7 @@ resource "aws_lb_listener_certificate" "additionalCerts" {
 }
 
 output "privateSubnets" {
-  value = local.privateSubnets
+  value = var.privateSubnets
 }
 output "loadBalancerArn" {
   value = aws_lb.alb.arn
