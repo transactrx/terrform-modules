@@ -29,6 +29,11 @@ variable "corpDomain" {
   type = string
 }
 
+variable "manage_dns" {
+  type    = bool
+  default = true
+}
+
 resource "aws_security_group" "ALBSecurityGroup" {
   name = var.albName
   description = "Security for the private Load Balancer"
@@ -48,10 +53,11 @@ resource "aws_security_group" "ALBSecurityGroup" {
 }
 
 resource "aws_route53_record" "privateHostRecord" {
-  name = var.publicDomain
-  type = "CNAME"
+  count   = var.manage_dns ? 1 : 0
+  name    = var.publicDomain
+  type    = "CNAME"
   zone_id = var.privateZoneId
-  ttl     = "300"
+  ttl     = 300
   records = [aws_lb.alb.dns_name]
 }
 
