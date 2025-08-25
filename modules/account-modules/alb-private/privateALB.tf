@@ -16,7 +16,7 @@ variable "publicCertificate" {
 }
 
 variable "additionalCerts" {
-  type    = any
+  type    = list(string)
   default = []
 }
 variable "publicDomain" {
@@ -130,33 +130,19 @@ resource "aws_lb_listener_rule" "redirectToOldUrl" {
 }
 
 locals {
-  # Normalize to a list, regardless of how it was passed.
-  _raw_list = (
-    var.additionalCerts == null ? [] :
-      can(tolist(var.additionalCerts)) ? tolist(var.additionalCerts) :
-      [tostring(var.additionalCerts)]
-  )
-
-  # Clean, dedupe, and make order deterministic (stable keys for for_each)
-  addl_list = sort(distinct([
-    for x in local._raw_list : trim(tostring(x))
-    if x != null && trim(tostring(x)) != ""
-  ]))
-
-  # Build a map keyed by indices so keys are known at plan time.
-  addl_map = { for idx, arn in local.addl_list : idx => arn }
+  cert_indexes = range(length(var.additionalCerts))
+  cert_index_map = { for i in local.cert_indexes : i => i }
 }
 
 resource "aws_lb_listener_certificate" "additionalCerts" {
-  for_each        = local.addl_map
+  for_each        = local.cert_index_map
   listener_arn    = aws_alb_listener.defaultListener.arn
-  certificate_arn = each.value
+  certificate_arn = var.additionalCerts[each.value]
 
-  # Guard against accidentally including the default cert.
   lifecycle {
     precondition {
-      condition     = each.value != var.publicCertificate
-      error_message = "additionalCerts must not include the listener's default certificate."
+      condition     = var.additionalCerts[each.value] != var.publicCertificate
+      error_message = "additionalCerts must exclude the listener's default certificate."
     }
   }
 }
