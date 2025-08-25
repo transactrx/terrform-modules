@@ -27,7 +27,7 @@ resource "aws_acm_certificate" "cert" {
 }
 
 resource "aws_ssm_parameter" "certificate_arn" {
-  name  = "/certificates/${data.aws_region.current.name}/${replace(var.certfqdn, ".", "_")}/arn"
+  name  = "/certificates/${data.aws_region.current.name}/${replace(replace(var.certfqdn, "*.", ""), ".", "_")}/arn"
   type  = "String"
   value = aws_acm_certificate.cert.arn
 }
