@@ -16,7 +16,7 @@ variable "publicCertificate" {
 }
 
 variable "additionalCerts" {
-  type    = set(string)
+  type    = any
   default = []
 }
 variable "publicDomain" {
@@ -129,24 +129,36 @@ resource "aws_lb_listener_rule" "redirectToOldUrl" {
   }
 }
 
-# Strip empties and normalize to a set(string)
 locals {
-  normalized_additional = toset([
-    for s in var.additionalCerts : s
-    if s != null && s != ""
-  ])
-
-  sni_certs = setsubtract(
-    local.normalized_additional,
-    toset([var.publicCertificate])
+  # Normalize to a list, regardless of how it was passed.
+  _raw_list = (
+    var.additionalCerts == null ? [] :
+      can(tolist(var.additionalCerts)) ? tolist(var.additionalCerts) :
+      [tostring(var.additionalCerts)]
   )
+
+  # Clean, dedupe, and make order deterministic (stable keys for for_each)
+  addl_list = sort(distinct([
+    for x in local._raw_list : trim(tostring(x))
+    if x != null && trim(tostring(x)) != ""
+  ]))
+
+  # Build a map keyed by indices so keys are known at plan time.
+  addl_map = { for idx, arn in local.addl_list : idx => arn }
 }
 
-# Attach all extra/SNI certs
 resource "aws_lb_listener_certificate" "additionalCerts" {
-  for_each        = local.sni_certs
+  for_each        = local.addl_map
   listener_arn    = aws_alb_listener.defaultListener.arn
-  certificate_arn = each.key   # (each.key == each.value for sets)
+  certificate_arn = each.value
+
+  # Guard against accidentally including the default cert.
+  lifecycle {
+    precondition {
+      condition     = each.value != var.publicCertificate
+      error_message = "additionalCerts must not include the listener's default certificate."
+    }
+  }
 }
 
 output "privateSubnets" {
