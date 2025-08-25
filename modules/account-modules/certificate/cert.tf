@@ -3,13 +3,10 @@ variable "certfqdn" {
 }
 variable "alt_names" {
   type = list(string)
-
 }
-
 
 locals {
   # Try to match the pattern; if it fails, return an empty list.
-
   domain = "${split(".", var.certfqdn)[1]}.${split(".", var.certfqdn)[2]}"
 }
 
@@ -18,6 +15,7 @@ data "aws_route53_zone" "zone" {
   name         = "${local.domain}."
   private_zone = false
 }
+data "aws_region" "current" {}
 
 # Request an ACM certificate for the domain and any SANs
 resource "aws_acm_certificate" "cert" {
@@ -29,7 +27,7 @@ resource "aws_acm_certificate" "cert" {
 }
 
 resource "aws_ssm_parameter" "certificate_arn" {
-  name  = "certificate_arn"
+  name  = "/certificates/${data.aws_region.current.name}/${replace(var.certfqdn, ".", "_")}/arn"
   type  = "String"
   value = aws_acm_certificate.cert.arn
 }
@@ -60,5 +58,9 @@ resource "aws_acm_certificate_validation" "cert_validation" {
 }
 
 output "certificate_arn" {
+  value = aws_acm_certificate_validation.cert_validation.certificate_arn
+}
+
+output "certificate_arn_raw" {
   value = aws_acm_certificate.cert.arn
 }
