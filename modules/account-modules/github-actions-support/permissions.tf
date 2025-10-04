@@ -372,3 +372,21 @@ resource "aws_iam_role_policy" "allow-dsql-creation" {
   policy = data.aws_iam_policy_document.allow-dsql-creation.json
   role   = aws_iam_role.github_actions.name
 }
+
+
+data "aws_iam_policy_document" "allow-backup" {
+  version = "2012-10-17"
+  statement {
+    effect = "Allow"
+    actions = [
+      "backup:*"
+    ]
+    resources = ["*"]
+  }
+
+}
+resource "aws_iam_role_policy" "allow-backup" {
+  name   = "allow-backup"
+  policy = data.aws_iam_policy_document.allow-backup.json
+  role   = aws_iam_role.github_actions.name
+}
