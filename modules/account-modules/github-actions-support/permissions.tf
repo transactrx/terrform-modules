@@ -390,3 +390,21 @@ resource "aws_iam_role_policy" "allow-backup" {
   policy = data.aws_iam_policy_document.allow-backup.json
   role   = aws_iam_role.github_actions.name
 }
+
+
+data "aws_iam_policy_document" "allow-KMS" {
+  version = "2012-10-17"
+  statement {
+    effect = "Allow"
+    actions = [
+      "kms:*"
+    ]
+    resources = ["*"]
+  }
+
+}
+resource "aws_iam_role_policy" "allow-KMS" {
+  name   = "allow-kms"
+  policy = data.aws_iam_policy_document.allow-KMS.json
+  role   = aws_iam_role.github_actions.name
+}
