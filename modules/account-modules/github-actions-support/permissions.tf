@@ -355,3 +355,20 @@ resource "aws_iam_role_policy" "allow-cognito-permissions" {
   role   = aws_iam_role.github_actions.name
   policy = data.aws_iam_policy_document.allow-cognito-permissions.json
 }
+
+data "aws_iam_policy_document" "allow-dsql-creation" {
+  version = "2012-10-17"
+  statement {
+    effect = "Allow"
+    actions = [
+      "dsql:*"
+    ]
+    resources = ["*"]
+  }
+
+}
+resource "aws_iam_role_policy" "allow-dsql-creation" {
+  name   = "allow-dsql-creation"
+  policy = data.aws_iam_policy_document.allow-dsql-creation.json
+  role   = aws_iam_role.github_actions.name
+}
