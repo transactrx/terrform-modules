@@ -78,6 +78,7 @@ data "aws_iam_policy_document" "allow_ec2_actions" {
     actions = [
       "ec2:Get*",
       "ec2:Desc*",
+      "ec2:CreateSecurityGroup",
       "ec2:*SecurityGroup",
       "ec2:*SecurityGroup*",
     ]
