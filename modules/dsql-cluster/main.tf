@@ -124,3 +124,13 @@ output "primary_identifier" {
 output "secondary_identifier" {
   value = aws_dsql_cluster.secondary.identifier
 }
+
+output "primary_vpc_endpoint_service_name" {
+  description = "VPC endpoint service name for the primary DSQL cluster"
+  value       = aws_dsql_cluster.primary.vpc_endpoint_service_name
+}
+
+output "secondary_vpc_endpoint_service_name" {
+  description = "VPC endpoint service name for the secondary DSQL cluster"
+  value       = aws_dsql_cluster.secondary.vpc_endpoint_service_name
+}
