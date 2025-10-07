@@ -37,6 +37,7 @@ locals {
 
 resource "aws_security_group" "dsql_sg" {
   count  = length(local.unique_dsql_clusters)
+  region= local.unique_dsql_clusters[count.index].region
   name   = local.unique_dsql_clusters[count.index].dsql_service_name
   vpc_id = local.unique_dsql_clusters[count.index].vpc_id
   tags = {
@@ -58,7 +59,7 @@ resource "aws_vpc_security_group_ingress_rule" "dsql_ingress" {
   to_port           = 5432
   ip_protocol       = "tcp"
   cidr_ipv4         = local.unique_dsql_clusters[count.index].vpc_cidr
-
+  region= local.unique_dsql_clusters[count.index].region
 #  provider = aws.region_providers[local.unique_dsql_clusters[count.index].region]
 }
 
@@ -74,7 +75,7 @@ resource "aws_vpc_endpoint" "dsql_endpoint" {
   vpc_endpoint_type   = "Interface"
   security_group_ids  = [aws_security_group.dsql_sg[count.index].id]
   private_dns_enabled = true
-
+  region= local.unique_dsql_clusters[count.index].region
 #  provider = aws.region_providers[local.unique_dsql_clusters[count.index].region]
 }
 
