@@ -43,7 +43,7 @@ resource "aws_security_group" "dsql_sg" {
     Name = local.unique_dsql_clusters[count.index].dsql_service_name
   }
 
-  provider = aws.region_providers[local.unique_dsql_clusters[count.index].region]
+#  provider = aws.region_providers[local.unique_dsql_clusters[count.index].region]
 }
 
 ############################################
@@ -59,7 +59,7 @@ resource "aws_vpc_security_group_ingress_rule" "dsql_ingress" {
   ip_protocol       = "tcp"
   cidr_ipv4         = local.unique_dsql_clusters[count.index].vpc_cidr
 
-  provider = aws.region_providers[local.unique_dsql_clusters[count.index].region]
+#  provider = aws.region_providers[local.unique_dsql_clusters[count.index].region]
 }
 
 ############################################
@@ -75,7 +75,7 @@ resource "aws_vpc_endpoint" "dsql_endpoint" {
   security_group_ids  = [aws_security_group.dsql_sg[count.index].id]
   private_dns_enabled = true
 
-  provider = aws.region_providers[local.unique_dsql_clusters[count.index].region]
+#  provider = aws.region_providers[local.unique_dsql_clusters[count.index].region]
 }
 
 ############################################
@@ -106,7 +106,7 @@ resource "aws_ssm_parameter" "dns_param" {
   type   = "String"
   value  = local.service_name_to_dns[var.dsql_clusters[count.index].dsql_service_name]
 
-  provider = aws.region_providers[var.dsql_clusters[count.index].region]
+#  provider = aws.region_providers[var.dsql_clusters[count.index].region]
 }
 
 resource "aws_ssm_parameter" "arn_param" {
@@ -115,7 +115,7 @@ resource "aws_ssm_parameter" "arn_param" {
   type   = "String"
   value  = var.dsql_clusters[count.index].dsql_arn
 
-  provider = aws.region_providers[var.dsql_clusters[count.index].region]
+#  provider = aws.region_providers[var.dsql_clusters[count.index].region]
 }
 
 ############################################
