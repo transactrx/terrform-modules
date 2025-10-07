@@ -102,6 +102,7 @@ resource "aws_ssm_parameter" "dns_param" {
   name   = "dsql_${var.dsql_clusters[count.index].name}_dns"
   type   = "String"
   value  = local.service_name_to_dns[var.dsql_clusters[count.index].dsql_service_name]
+  region= local.unique_dsql_clusters[count.index].region
 }
 
 resource "aws_ssm_parameter" "arn_param" {
@@ -109,6 +110,7 @@ resource "aws_ssm_parameter" "arn_param" {
   name   = "dsql_${var.dsql_clusters[count.index].name}_arn"
   type   = "String"
   value  = var.dsql_clusters[count.index].dsql_arn
+  region= local.unique_dsql_clusters[count.index].region
 }
 
 ############################################
