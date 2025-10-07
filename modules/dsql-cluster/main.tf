@@ -42,7 +42,7 @@ resource "aws_dsql_cluster" "primary" {
   deletion_protection_enabled = var.deletion_protection_enabled
 
   tags = {
-    Name = "${var.name}-primary"
+    Name = "${var.name}"
   }
 
   multi_region_properties {
@@ -59,7 +59,7 @@ resource "aws_dsql_cluster" "secondary" {
   deletion_protection_enabled = var.deletion_protection_enabled
 
   tags = {
-    Name = "${var.name}-secondary"
+    Name = "${var.name}"
   }
 
   multi_region_properties {
