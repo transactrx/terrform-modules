@@ -445,3 +445,16 @@ resource "aws_iam_role_policy" "allow-ssm" {
   policy = data.aws_iam_policy_document.allow-ssm.json
   role   = aws_iam_role.github_actions.name
 }
+
+
+data "aws_iam_policy_document" "allow-lambda" {
+  version = "2012-10-17"
+  statement {
+    effect = "Allow"
+    actions = [
+      "lambda:*"
+    ]
+    resources = ["*"]
+  }
+
+}
