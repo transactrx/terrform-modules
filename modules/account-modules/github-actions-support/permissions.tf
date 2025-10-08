@@ -447,14 +447,21 @@ resource "aws_iam_role_policy" "allow-ssm" {
 }
 
 
-data "aws_iam_policy_document" "allow-lambda" {
+data "aws_iam_policy_document" "allow-lambda-invoke" {
   version = "2012-10-17"
+
   statement {
-    effect = "Allow"
+    sid     = "AllowInvokeAlbSequenceLambdasAllEnv"
+    effect  = "Allow"
     actions = [
       "lambda:*"
     ]
     resources = ["*"]
   }
+}
 
+resource "aws_iam_role_policy" "allow-lambda-invoke" {
+  name   = "allow-lambda-invoke"
+  policy = data.aws_iam_policy_document.allow-lambda-invoke.json
+  role   = aws_iam_role.github_actions.name
 }
