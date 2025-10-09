@@ -206,6 +206,10 @@ resource "aws_lb_target_group" "albTargetGroup" {
     timeout             = 5
   }
   vpc_id = var.vpc_id
+
+  depends_on = [
+    aws_lb_listener_rule.albListenerRule
+  ]
 }
 
 ###########################
