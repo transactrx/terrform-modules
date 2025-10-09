@@ -183,9 +183,15 @@ resource "aws_lb_target_group" "albTargetGroup" {
 
   protocol    = var.alb_service_protocol
   target_type = "ip"
-  name = (var.applicationLoadBalancerAttachment.name != null ?
-    "${var.serviceName}-${var.applicationLoadBalancerAttachment.name}" :
-  "${var.serviceName}-${var.applicationLoadBalancerAttachment.containerName}-${var.applicationLoadBalancerAttachment.containerPort}")
+  # Note:
+  # AWS ALB Target Group names are limited to 32 characters.
+  # To ensure compatibility across environments, we truncate long names automatically.
+  # This preserves backward compatibility while preventing "name cannot be longer than 32 characters" errors.
+  name = substr((
+  var.applicationLoadBalancerAttachment.name != null ?
+  "${var.serviceName}-${var.applicationLoadBalancerAttachment.name}" :
+  "${var.serviceName}-${var.applicationLoadBalancerAttachment.containerName}-${var.applicationLoadBalancerAttachment.containerPort}"
+  ), 0, 32)
   deregistration_delay = 120
   port                 = var.applicationLoadBalancerAttachment.containerPort
 
