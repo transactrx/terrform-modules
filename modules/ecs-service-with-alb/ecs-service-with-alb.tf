@@ -181,7 +181,7 @@ resource "aws_security_group_rule" "sgRules" {
 
 resource "aws_lb_target_group" "albTargetGroup" {
 
-  protocol    = var.alb_service_protocol
+  protocol    = var.applicationLoadBalancerAttachment.protocol
   target_type = "ip"
   # Note:
   # AWS ALB Target Group names are limited to 32 characters.
@@ -196,7 +196,7 @@ resource "aws_lb_target_group" "albTargetGroup" {
   port                 = var.applicationLoadBalancerAttachment.containerPort
 
   health_check {
-    protocol = var.alb_service_protocol
+    protocol = var.applicationLoadBalancerAttachment.protocol
     path = (var.applicationLoadBalancerAttachment.healthCheckPath != null ?
     var.applicationLoadBalancerAttachment.healthCheckPath : "/")
     healthy_threshold   = 5
