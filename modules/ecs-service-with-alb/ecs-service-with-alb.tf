@@ -78,6 +78,11 @@ variable "applicationLoadBalancerAttachment" {
     rulePriority    = optional(number)
     pathPattern     = optional(string)
     publicHostName        = string
+    healthy_threshold    = optional(number)
+    unhealthy_threshold  = optional(number)
+    matcher              = optional(string)
+    interval             = optional(number)
+    timeout              = optional(number)
   })
 
   default = {
@@ -92,7 +97,12 @@ variable "applicationLoadBalancerAttachment" {
     rulePriority    = null,
     pathPattern     = null,
     publicHostName        = null,
-    listenerArn     = null
+    listenerArn     = null,
+    healthy_threshold    = null,
+    unhealthy_threshold  = null,
+    matcher              = null,
+    interval             = null,
+    timeout              = null
   }
 }
 
@@ -199,11 +209,13 @@ resource "aws_lb_target_group" "albTargetGroup" {
     protocol = var.applicationLoadBalancerAttachment.protocol
     path = (var.applicationLoadBalancerAttachment.healthCheckPath != null ?
     var.applicationLoadBalancerAttachment.healthCheckPath : "/")
-    healthy_threshold   = 5
-    unhealthy_threshold = 5
-    matcher             = "200-399"
-    interval            = 30
-    timeout             = 5
+
+    healthy_threshold   = try(var.applicationLoadBalancerAttachment.healthy_threshold, 5)
+    unhealthy_threshold = try(var.applicationLoadBalancerAttachment.unhealthy_threshold, 5)
+    matcher             = try(var.applicationLoadBalancerAttachment.matcher, "200-399")
+    interval            = try(var.applicationLoadBalancerAttachment.interval, 30)
+    timeout             = try(var.applicationLoadBalancerAttachment.timeout, 5)
+
   }
   vpc_id = var.vpc_id
 
