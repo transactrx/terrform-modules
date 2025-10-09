@@ -207,9 +207,6 @@ resource "aws_lb_target_group" "albTargetGroup" {
   }
   vpc_id = var.vpc_id
 
-  depends_on = [
-    aws_lb_listener_rule.albListenerRule
-  ]
 }
 
 ###########################
@@ -236,7 +233,9 @@ resource "aws_lb_listener_rule" "albListenerRule" {
 
   # Use provided rulePriority or default to a unique value (starting at 100).
   priority = var.applicationLoadBalancerAttachment.rulePriority
-
+  depends_on = [
+    aws_lb_target_group.albTargetGroup  # ✅ correct dependency direction
+  ]
   action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.albTargetGroup.arn
