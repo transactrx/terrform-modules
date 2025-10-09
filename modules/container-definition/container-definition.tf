@@ -49,6 +49,13 @@ variable "logIsBlocking" {
 }
 data "aws_region" "current" {}
 
+variable "dependsOn" {
+  type = list(object({
+    condition     = string
+    containerName = string
+  }))
+  default = null
+}
 
 locals {
   containerDefinition = {
@@ -69,6 +76,7 @@ locals {
     environment  = var.envVariables
     portMappings = var.portMappings
     secrets      = var.secrets
+    dependsOn    = var.dependsOn
   }
 }
 
