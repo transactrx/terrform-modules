@@ -31,22 +31,9 @@ variable "vpc_id" {
 }
 
 variable "dnsName" {
-  type = string
-}
-
-locals {
-  # Split the FQDN into parts, then join the last two segments as the zone name.
-  dns_parts = split(".", var.dnsName)
-  zone_name = join(".", slice(local.dns_parts, length(local.dns_parts) - 2, length(local.dns_parts)))
-}
-
-data "aws_route53_zone" "public" {
-  name         = local.zone_name
-  private_zone = false
-}
-
-data "aws_lb" "alb" {
-  arn = var.applicationLoadBalancerAttachment.lbArn
+  type        = string
+  description = "FQDN for DNS record (optional if Route53 record creation disabled)"
+  default     = null
 }
 
 variable "create_route53_record" {
@@ -55,10 +42,29 @@ variable "create_route53_record" {
   default     = true
 }
 
-resource "aws_route53_record" "app_dns" {
-  count = var.create_route53_record ? 1 : 0
+locals {
+  dns_parts = var.dnsName != null ? split(".", var.dnsName) : []
+  zone_name = length(local.dns_parts) >= 2 ? join(".", slice(local.dns_parts, length(local.dns_parts) - 2, length(local.dns_parts))) : ""
+}
 
-  zone_id = data.aws_route53_zone.public.zone_id
+data "aws_route53_zone" "public" {
+  count        = var.create_route53_record && var.dnsName != null ? 1 : 0
+  name         = local.zone_name
+  private_zone = false
+}
+
+data "aws_lb" "alb" {
+  arn = var.applicationLoadBalancerAttachment.lbArn
+}
+
+###########################
+# Route53 Record (Conditional)
+###########################
+
+resource "aws_route53_record" "app_dns" {
+  count = var.create_route53_record && var.dnsName != null ? 1 : 0
+
+  zone_id = data.aws_route53_zone.public[0].zone_id
   name    = var.dnsName
   type    = "A"
 
@@ -69,47 +75,49 @@ resource "aws_route53_record" "app_dns" {
   }
 }
 
+###########################
+# ALB Attachments and Config
+###########################
 
 variable "applicationLoadBalancerAttachment" {
-
   type = object({
-    containerName   = string
-    containerPort   = number
-    protocol        = string
-    lbArn           = string
-    listenerArn     = string
-    lbPort          = number
-    certificateArn  = optional(string)
-    name            = optional(string)
-    healthCheckPath = optional(string)
-    rulePriority    = optional(number)
-    pathPattern     = optional(string)
-    publicHostName        = string
-    healthy_threshold    = optional(number)
-    unhealthy_threshold  = optional(number)
-    matcher              = optional(string)
-    interval             = optional(number)
-    timeout              = optional(number)
+    containerName       = string
+    containerPort       = number
+    protocol            = string
+    lbArn               = string
+    listenerArn         = string
+    lbPort              = number
+    certificateArn      = optional(string)
+    name                = optional(string)
+    healthCheckPath     = optional(string)
+    rulePriority        = optional(number)
+    pathPattern         = optional(string)
+    publicHostName      = string
+    healthy_threshold   = optional(number)
+    unhealthy_threshold = optional(number)
+    matcher             = optional(string)
+    interval            = optional(number)
+    timeout             = optional(number)
   })
 
   default = {
-    containerName   = null,
-    containerPort   = null,
-    protocol        = null,
-    lbArn           = null,
-    lbPort          = null,
-    certificateArn  = null,
-    name            = null,
-    healthCheckPath = null,
-    rulePriority    = null,
-    pathPattern     = null,
-    publicHostName        = null,
-    listenerArn     = null,
-    healthy_threshold    = null,
-    unhealthy_threshold  = null,
-    matcher              = null,
-    interval             = null,
-    timeout              = null
+    containerName       = null
+    containerPort       = null
+    protocol            = null
+    lbArn               = null
+    lbPort              = null
+    certificateArn      = null
+    name                = null
+    healthCheckPath     = null
+    rulePriority        = null
+    pathPattern         = null
+    publicHostName      = null
+    listenerArn         = null
+    healthy_threshold   = null
+    unhealthy_threshold = null
+    matcher             = null
+    interval            = null
+    timeout             = null
   }
 }
 
@@ -154,8 +162,6 @@ variable "auto_scaler_config" {
 # Data Sources and Locals
 ###########################
 
-
-
 data "aws_vpc" "vpc" {
   id = var.vpc_id
 }
@@ -182,7 +188,6 @@ resource "aws_security_group" "serviceSg" {
 }
 
 resource "aws_security_group_rule" "sgRules" {
-
   from_port         = local.containerPortToBeOpen
   protocol          = "TCP"
   security_group_id = aws_security_group.serviceSg.id
@@ -197,13 +202,8 @@ resource "aws_security_group_rule" "sgRules" {
 ###########################
 
 resource "aws_lb_target_group" "albTargetGroup" {
-
   protocol    = var.applicationLoadBalancerAttachment.protocol
   target_type = "ip"
-  # Note:
-  # AWS ALB Target Group names are limited to 32 characters.
-  # To ensure compatibility across environments, we truncate long names automatically.
-  # This preserves backward compatibility while preventing "name cannot be longer than 32 characters" errors.
   name = substr((
   var.applicationLoadBalancerAttachment.name != null ?
   "${var.serviceName}-${var.applicationLoadBalancerAttachment.name}" :
@@ -213,19 +213,16 @@ resource "aws_lb_target_group" "albTargetGroup" {
   port                 = var.applicationLoadBalancerAttachment.containerPort
 
   health_check {
-    protocol = var.applicationLoadBalancerAttachment.protocol
-    path = (var.applicationLoadBalancerAttachment.healthCheckPath != null ?
-    var.applicationLoadBalancerAttachment.healthCheckPath : "/")
-
+    protocol            = var.applicationLoadBalancerAttachment.protocol
+    path                = (var.applicationLoadBalancerAttachment.healthCheckPath != null ? var.applicationLoadBalancerAttachment.healthCheckPath : "/")
     healthy_threshold   = try(var.applicationLoadBalancerAttachment.healthy_threshold, 5)
     unhealthy_threshold = try(var.applicationLoadBalancerAttachment.unhealthy_threshold, 5)
     matcher             = try(var.applicationLoadBalancerAttachment.matcher, "200-399")
     interval            = try(var.applicationLoadBalancerAttachment.interval, 30)
     timeout             = try(var.applicationLoadBalancerAttachment.timeout, 5)
-
   }
-  vpc_id = var.vpc_id
 
+  vpc_id = var.vpc_id
 }
 
 ###########################
@@ -258,9 +255,7 @@ resource "aws_lb_listener_rule" "albListenerRule" {
   # --- Always include host header ---
   condition {
     host_header {
-      values = [
-        var.applicationLoadBalancerAttachment.publicHostName
-      ]
+      values = [var.applicationLoadBalancerAttachment.publicHostName]
     }
   }
 }
@@ -291,9 +286,7 @@ resource "aws_ecs_service" "ecs_service" {
   }
 
   lifecycle {
-    ignore_changes = [
-      "capacity_provider_strategy"
-    ]
+    ignore_changes = [capacity_provider_strategy]
   }
 }
 
