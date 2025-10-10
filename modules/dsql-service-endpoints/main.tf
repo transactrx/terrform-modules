@@ -21,13 +21,8 @@ variable "dsql_clusters" {
 ############################################
 
 resource "aws_security_group" "dsql_sg" {
-  # ✅ Use the index as key — always known at plan time
-  for_each = {
-    for idx, cluster in var.dsql_clusters :
-    idx => cluster
-  }
+  for_each = { for idx, cluster in var.dsql_clusters : idx => cluster }
 
-  # ✅ Unique SG name to avoid AWS duplication
   name   = "${each.value.region}-${each.value.name}-tf-managed"
   vpc_id = each.value.vpc_id
   region = each.value.region
@@ -41,30 +36,29 @@ resource "aws_security_group" "dsql_sg" {
 ############################################
 # INGRESS RULES
 ############################################
-
 resource "aws_vpc_security_group_ingress_rule" "dsql_ingress" {
-  for_each = aws_security_group.dsql_sg
+  for_each = { for idx, cluster in var.dsql_clusters : idx => cluster }
 
-  security_group_id = each.value.id
+  security_group_id = aws_security_group.dsql_sg[each.key].id
   from_port         = 5432
   to_port           = 5432
   ip_protocol       = "tcp"
-  cidr_ipv4         = each.value.vpc_cidr
-  region            = each.value.region
+
+  cidr_ipv4 = each.value.vpc_cidr
+  region    = each.value.region
 }
 
 ############################################
 # VPC ENDPOINTS
 ############################################
-
 resource "aws_vpc_endpoint" "dsql_endpoint" {
-  for_each = aws_security_group.dsql_sg
+  for_each = { for idx, cluster in var.dsql_clusters : idx => cluster }
 
   vpc_id              = each.value.vpc_id
   subnet_ids          = each.value.subnet_ids
   service_name        = each.value.dsql_service_name
   vpc_endpoint_type   = "Interface"
-  security_group_ids  = [each.value.id]
+  security_group_ids  = [aws_security_group.dsql_sg[each.key].id]
   private_dns_enabled = true
   region              = each.value.region
 }
