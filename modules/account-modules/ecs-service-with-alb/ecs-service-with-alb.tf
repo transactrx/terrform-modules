@@ -49,18 +49,25 @@ data "aws_lb" "alb" {
   arn = var.applicationLoadBalancerAttachment.lbArn
 }
 
-#resource "aws_route53_record" "app_dns" {
-#  zone_id = data.aws_route53_zone.public.zone_id
-#  name    = var.dnsName
-#  type    = "A"
-#
-#  alias {
-#    name                   = data.aws_lb.alb.dns_name
-#    zone_id                = data.aws_lb.alb.zone_id
-#    evaluate_target_health = false
-#  }
-#}
+variable "create_route53_record" {
+  description = "Whether to create a Route53 DNS record"
+  type        = bool
+  default     = true
+}
 
+resource "aws_route53_record" "app_dns" {
+  count = var.create_route53_record ? 1 : 0
+
+  zone_id = data.aws_route53_zone.public.zone_id
+  name    = var.dnsName
+  type    = "A"
+
+  alias {
+    name                   = data.aws_lb.alb.dns_name
+    zone_id                = data.aws_lb.alb.zone_id
+    evaluate_target_health = false
+  }
+}
 
 
 variable "applicationLoadBalancerAttachment" {
@@ -225,43 +232,30 @@ resource "aws_lb_target_group" "albTargetGroup" {
 # ALB Listeners and Rules
 ###########################
 
-# resource "aws_lb_listener" "albListeners" {
-#   count             = length(var.applicationLoadBalancerAttachments)
-#   load_balancer_arn = var.applicationLoadBalancerAttachments[count.index].lbArn
-#   port              = var.applicationLoadBalancerAttachments[count.index].lbPort
-#   protocol          = var.applicationLoadBalancerAttachments[count.index].protocol
-
-#   certificate_arn   = (lower(var.applicationLoadBalancerAttachments[count.index].protocol) == "https" ?
-#                       var.applicationLoadBalancerAttachments[count.index].certificateArn : null)
-
-#   default_action {
-#     type             = "forward"
-#     target_group_arn = aws_lb_target_group.albTargetGroup[count.index].arn
-#   }
-# }
-
 resource "aws_lb_listener_rule" "albListenerRule" {
   listener_arn = var.applicationLoadBalancerAttachment.listenerArn
-
-  # Use provided rulePriority or default to a unique value (starting at 100).
-  priority = var.applicationLoadBalancerAttachment.rulePriority
+  priority     = var.applicationLoadBalancerAttachment.rulePriority
 
   action {
     type             = "forward"
     target_group_arn = aws_lb_target_group.albTargetGroup.arn
   }
 
-  # Path pattern condition
-  condition {
-    path_pattern {
-      values = [
-        var.applicationLoadBalancerAttachment.pathPattern != null ?
-        var.applicationLoadBalancerAttachment.pathPattern : "/*"
-      ]
+  # --- Conditional path pattern ---
+  dynamic "condition" {
+    for_each = (
+    var.applicationLoadBalancerAttachment.pathPattern != null &&
+    trim(var.applicationLoadBalancerAttachment.pathPattern) != ""
+    ) ? [1] : []
+
+    content {
+      path_pattern {
+        values = [var.applicationLoadBalancerAttachment.pathPattern]
+      }
     }
   }
 
-  # Host header condition
+  # --- Always include host header ---
   condition {
     host_header {
       values = [
