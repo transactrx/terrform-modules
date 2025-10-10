@@ -49,17 +49,17 @@ data "aws_lb" "alb" {
   arn = var.applicationLoadBalancerAttachment.lbArn
 }
 
-resource "aws_route53_record" "app_dns" {
-  zone_id = data.aws_route53_zone.public.zone_id
-  name    = var.dnsName
-  type    = "A"
-
-  alias {
-    name                   = data.aws_lb.alb.dns_name
-    zone_id                = data.aws_lb.alb.zone_id
-    evaluate_target_health = false
-  }
-}
+#resource "aws_route53_record" "app_dns" {
+#  zone_id = data.aws_route53_zone.public.zone_id
+#  name    = var.dnsName
+#  type    = "A"
+#
+#  alias {
+#    name                   = data.aws_lb.alb.dns_name
+#    zone_id                = data.aws_lb.alb.zone_id
+#    evaluate_target_health = false
+#  }
+#}
 
 
 
@@ -78,6 +78,11 @@ variable "applicationLoadBalancerAttachment" {
     rulePriority    = optional(number)
     pathPattern     = optional(string)
     publicHostName        = string
+    healthy_threshold    = optional(number)
+    unhealthy_threshold  = optional(number)
+    matcher              = optional(string)
+    interval             = optional(number)
+    timeout              = optional(number)
   })
 
   default = {
@@ -92,7 +97,12 @@ variable "applicationLoadBalancerAttachment" {
     rulePriority    = null,
     pathPattern     = null,
     publicHostName        = null,
-    listenerArn     = null
+    listenerArn     = null,
+    healthy_threshold    = null,
+    unhealthy_threshold  = null,
+    matcher              = null,
+    interval             = null,
+    timeout              = null
   }
 }
 
@@ -181,25 +191,34 @@ resource "aws_security_group_rule" "sgRules" {
 
 resource "aws_lb_target_group" "albTargetGroup" {
 
-  protocol    = var.alb_service_protocol
+  protocol    = var.applicationLoadBalancerAttachment.protocol
   target_type = "ip"
-  name = (var.applicationLoadBalancerAttachment.name != null ?
+  # Note:
+  # AWS ALB Target Group names are limited to 32 characters.
+  # To ensure compatibility across environments, we truncate long names automatically.
+  # This preserves backward compatibility while preventing "name cannot be longer than 32 characters" errors.
+  name = substr((
+  var.applicationLoadBalancerAttachment.name != null ?
   "${var.serviceName}-${var.applicationLoadBalancerAttachment.name}" :
-  "${var.serviceName}-${var.applicationLoadBalancerAttachment.containerName}-${var.applicationLoadBalancerAttachment.containerPort}")
+  "${var.serviceName}-${var.applicationLoadBalancerAttachment.containerName}-${var.applicationLoadBalancerAttachment.containerPort}"
+  ), 0, 32)
   deregistration_delay = 120
   port                 = var.applicationLoadBalancerAttachment.containerPort
 
   health_check {
-    protocol = var.alb_service_protocol
+    protocol = var.applicationLoadBalancerAttachment.protocol
     path = (var.applicationLoadBalancerAttachment.healthCheckPath != null ?
     var.applicationLoadBalancerAttachment.healthCheckPath : "/")
-    healthy_threshold   = 5
-    unhealthy_threshold = 5
-    matcher             = "200-399"
-    interval            = 30
-    timeout             = 5
+
+    healthy_threshold   = try(var.applicationLoadBalancerAttachment.healthy_threshold, 5)
+    unhealthy_threshold = try(var.applicationLoadBalancerAttachment.unhealthy_threshold, 5)
+    matcher             = try(var.applicationLoadBalancerAttachment.matcher, "200-399")
+    interval            = try(var.applicationLoadBalancerAttachment.interval, 30)
+    timeout             = try(var.applicationLoadBalancerAttachment.timeout, 5)
+
   }
   vpc_id = var.vpc_id
+
 }
 
 ###########################
