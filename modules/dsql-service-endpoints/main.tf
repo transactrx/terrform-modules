@@ -21,20 +21,20 @@ variable "dsql_clusters" {
 ############################################
 
 resource "aws_security_group" "dsql_sg" {
+  # ✅ Use the index as key — always known at plan time
   for_each = {
-    for cluster in var.dsql_clusters :
-    cluster.dsql_service_name => cluster
+    for idx, cluster in var.dsql_clusters :
+    idx => cluster
   }
 
-  # ✅ Use unique name to avoid AWS 'InvalidGroup.Duplicate' error
-  name   = "${each.key}-tf-managed"
-
+  # ✅ Unique SG name to avoid AWS duplication
+  name   = "${each.value.region}-${each.value.name}-tf-managed"
   vpc_id = each.value.vpc_id
   region = each.value.region
 
   tags = {
-    Name        = "${each.key}-tf-managed"
-    Description = "Terraform-managed DSQL SG for ${each.key}"
+    Name        = "${each.value.region}-${each.value.name}-tf-managed"
+    Description = "Terraform-managed DSQL SG for ${each.value.region}"
   }
 }
 
@@ -49,15 +49,8 @@ resource "aws_vpc_security_group_ingress_rule" "dsql_ingress" {
   from_port         = 5432
   to_port           = 5432
   ip_protocol       = "tcp"
-
-  # Match cluster data by service name (safe, deterministic)
-  cidr_ipv4 = var.dsql_clusters[
-  index([for c in var.dsql_clusters : c.dsql_service_name], each.key)
-  ].vpc_cidr
-
-  region = var.dsql_clusters[
-  index([for c in var.dsql_clusters : c.dsql_service_name], each.key)
-  ].region
+  cidr_ipv4         = each.value.vpc_cidr
+  region            = each.value.region
 }
 
 ############################################
@@ -65,16 +58,13 @@ resource "aws_vpc_security_group_ingress_rule" "dsql_ingress" {
 ############################################
 
 resource "aws_vpc_endpoint" "dsql_endpoint" {
-  for_each = {
-    for cluster in var.dsql_clusters :
-    cluster.dsql_service_name => cluster
-  }
+  for_each = aws_security_group.dsql_sg
 
   vpc_id              = each.value.vpc_id
   subnet_ids          = each.value.subnet_ids
   service_name        = each.value.dsql_service_name
   vpc_endpoint_type   = "Interface"
-  security_group_ids  = [aws_security_group.dsql_sg[each.key].id]
+  security_group_ids  = [each.value.id]
   private_dns_enabled = true
   region              = each.value.region
 }
@@ -89,12 +79,11 @@ locals {
     k => replace(
       [
         for entry in endpoint.dns_entry :
-        entry.dns_name if startswith(entry.dns_name, "*") && !strcontains(entry.dns_name, "vpce-")
+        entry.dns_name
+        if startswith(entry.dns_name, "*") && !strcontains(entry.dns_name, "vpce-")
       ][0],
       "*",
-      var.dsql_clusters[
-      index([for c in var.dsql_clusters : c.dsql_service_name], k)
-      ].dsql_id
+      var.dsql_clusters[k].dsql_id
     )
   }
 }
@@ -106,7 +95,7 @@ locals {
 resource "aws_ssm_parameter" "dns_param" {
   for_each = aws_vpc_endpoint.dsql_endpoint
 
-  name   = "dsql_${var.dsql_clusters[index([for c in var.dsql_clusters : c.dsql_service_name], each.key)].name}_dns"
+  name   = "dsql_${var.dsql_clusters[tonumber(each.key)].name}_dns"
   type   = "String"
   value  = local.service_name_to_dns[each.key]
   region = each.value.region
@@ -115,9 +104,9 @@ resource "aws_ssm_parameter" "dns_param" {
 resource "aws_ssm_parameter" "arn_param" {
   for_each = aws_vpc_endpoint.dsql_endpoint
 
-  name   = "dsql_${var.dsql_clusters[index([for c in var.dsql_clusters : c.dsql_service_name], each.key)].name}_arn"
+  name   = "dsql_${var.dsql_clusters[tonumber(each.key)].name}_arn"
   type   = "String"
-  value  = var.dsql_clusters[index([for c in var.dsql_clusters : c.dsql_service_name], each.key)].dsql_arn
+  value  = var.dsql_clusters[tonumber(each.key)].dsql_arn
   region = each.value.region
 }
 
