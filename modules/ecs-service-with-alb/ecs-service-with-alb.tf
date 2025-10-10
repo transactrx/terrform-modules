@@ -184,7 +184,7 @@ resource "aws_lb_target_group" "albTargetGroup" {
   protocol    = var.alb_service_protocol
   target_type = "ip"
   name = (var.applicationLoadBalancerAttachment.name != null ?
-  "${var.serviceName}-${var.applicationLoadBalancerAttachment.name}" :
+    "${var.serviceName}-${var.applicationLoadBalancerAttachment.name}" :
   "${var.serviceName}-${var.applicationLoadBalancerAttachment.containerName}-${var.applicationLoadBalancerAttachment.containerPort}")
   deregistration_delay = 120
   port                 = var.applicationLoadBalancerAttachment.containerPort
