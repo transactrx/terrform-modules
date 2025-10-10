@@ -26,12 +26,15 @@ resource "aws_security_group" "dsql_sg" {
     cluster.dsql_service_name => cluster
   }
 
-  name   = each.key
+  # ✅ Use unique name to avoid AWS 'InvalidGroup.Duplicate' error
+  name   = "${each.key}-tf-managed"
+
   vpc_id = each.value.vpc_id
   region = each.value.region
 
   tags = {
-    Name = each.key
+    Name        = "${each.key}-tf-managed"
+    Description = "Terraform-managed DSQL SG for ${each.key}"
   }
 }
 
