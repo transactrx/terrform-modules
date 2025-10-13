@@ -473,7 +473,7 @@ data "aws_iam_policy_document" "allow_codestar_connection_use" {
   statement {
     effect = "Allow"
     actions = [
-      "codestar-connections:UseConnection"
+      "codestar-connections:*"
     ]
     resources = ["*"]
   }
