@@ -465,3 +465,22 @@ resource "aws_iam_role_policy" "allow-lambda-invoke" {
   policy = data.aws_iam_policy_document.allow-lambda-invoke.json
   role   = aws_iam_role.github_actions.name
 }
+
+
+data "aws_iam_policy_document" "allow_codestar_connection_use" {
+  version = "2012-10-17"
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "codestar-connections:UseConnection"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "allow_codestar_connection_use" {
+  name   = "allow_codestar_connection_use"
+  role   = aws_iam_role.github_actions.name
+  policy = data.aws_iam_policy_document.allow_codestar_connection_use.json
+}
