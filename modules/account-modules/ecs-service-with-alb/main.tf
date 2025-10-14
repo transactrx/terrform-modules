@@ -260,14 +260,6 @@ resource "aws_lb_listener_rule" "albListenerRule" {
   }
 }
 
-  # --- Always include host header ---
-  condition {
-    host_header {
-      values = [var.applicationLoadBalancerAttachment.publicHostName]
-    }
-  }
-}
-
 ###########################
 # ECS Service
 ###########################
