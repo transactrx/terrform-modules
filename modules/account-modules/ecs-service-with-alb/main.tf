@@ -242,7 +242,7 @@ resource "aws_lb_listener_rule" "albListenerRule" {
   dynamic "condition" {
     for_each = (
     var.applicationLoadBalancerAttachment.pathPattern != null &&
-    trim(var.applicationLoadBalancerAttachment.pathPattern) != ""
+    trim(tostring(var.applicationLoadBalancerAttachment.pathPattern), "/") != ""
     ) ? [1] : []
 
     content {
@@ -251,6 +251,14 @@ resource "aws_lb_listener_rule" "albListenerRule" {
       }
     }
   }
+
+  # --- Always include host header ---
+  condition {
+    host_header {
+      values = [var.applicationLoadBalancerAttachment.publicHostName]
+    }
+  }
+}
 
   # --- Always include host header ---
   condition {
