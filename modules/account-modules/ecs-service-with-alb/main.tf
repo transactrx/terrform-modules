@@ -168,6 +168,18 @@ data "aws_vpc" "vpc" {
 
 locals {
   containerPortToBeOpen = var.applicationLoadBalancerAttachment.containerPort
+
+  # 🧩 SAFE target group name (prevents trailing "-")
+  _raw_tg_name = (
+  var.applicationLoadBalancerAttachment.name != null ?
+  "${var.serviceName}-${var.applicationLoadBalancerAttachment.name}" :
+  "${var.serviceName}-${var.applicationLoadBalancerAttachment.containerName}-${var.applicationLoadBalancerAttachment.containerPort}"
+  )
+
+  safe_target_group_name = trim(substr(local._raw_tg_name, 0, 32), "-")
+
+  # 🧩 SAFE security group name (same logic)
+  safe_security_group_name = trim(substr("${var.serviceName}", 0, 32), "-")
 }
 
 ###########################
@@ -175,7 +187,7 @@ locals {
 ###########################
 
 resource "aws_security_group" "serviceSg" {
-  name   = var.serviceName
+  name   = local.safe_security_group_name
   vpc_id = var.vpc_id
 
   egress {
@@ -204,11 +216,7 @@ resource "aws_security_group_rule" "sgRules" {
 resource "aws_lb_target_group" "albTargetGroup" {
   protocol    = var.applicationLoadBalancerAttachment.protocol
   target_type = "ip"
-  name = substr((
-  var.applicationLoadBalancerAttachment.name != null ?
-  "${var.serviceName}-${var.applicationLoadBalancerAttachment.name}" :
-  "${var.serviceName}-${var.applicationLoadBalancerAttachment.containerName}-${var.applicationLoadBalancerAttachment.containerPort}"
-  ), 0, 32)
+  name        = local.safe_target_group_name
   deregistration_delay = 120
   port                 = var.applicationLoadBalancerAttachment.containerPort
 
@@ -238,7 +246,6 @@ resource "aws_lb_listener_rule" "albListenerRule" {
     target_group_arn = aws_lb_target_group.albTargetGroup.arn
   }
 
-  # --- Conditional path pattern ---
   dynamic "condition" {
     for_each = (
     var.applicationLoadBalancerAttachment.pathPattern != null &&
@@ -252,7 +259,6 @@ resource "aws_lb_listener_rule" "albListenerRule" {
     }
   }
 
-  # --- Always include host header ---
   condition {
     host_header {
       values = [var.applicationLoadBalancerAttachment.publicHostName]
@@ -354,4 +360,8 @@ output "securityGroupArn" {
 
 output "securityGroupName" {
   value = aws_security_group.serviceSg.name
+}
+
+output "targetGroupName" {
+  value = local.safe_target_group_name
 }
