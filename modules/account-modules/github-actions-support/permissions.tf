@@ -484,3 +484,25 @@ resource "aws_iam_role_policy" "allow_codestar_connection_use" {
   role   = aws_iam_role.github_actions.name
   policy = data.aws_iam_policy_document.allow_codestar_connection_use.json
 }
+
+
+# IAM Policy Document for Global Accelerator permissions
+data "aws_iam_policy_document" "allow_globalaccelerator_permissions" {
+  version = "2012-10-17"
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "globalaccelerator:*"
+    ]
+    resources = ["*"]
+  }
+}
+
+# IAM Role Policy for Global Accelerator (if you need to attach to a role)
+resource "aws_iam_role_policy" "allow_globalaccelerator_permissions" {
+  name   = "allow-globalaccelerator-permissions"
+  policy = data.aws_iam_policy_document.allow_globalaccelerator_permissions.json
+  role   = aws_iam_role.github_actions.name  # Replace with your role name
+}
+
