@@ -154,6 +154,7 @@ data "aws_iam_policy_document" "allow-iam-role-creation" {
       "iam:GetPolicyVersion",
       "iam:ListPolicyVersions",
       "iam:DeletePolicy",
+      "iam:DeletePolicyVersion",
       "iam:CreateRole",
       "iam:GetRolePolicy",
       "iam:GetRole",
