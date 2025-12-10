@@ -57,6 +57,14 @@ variable "dependsOn" {
   default = null
 }
 
+variable "volumesFrom" {
+  type = list(object({
+    sourceContainer = string
+    readOnly        = optional(bool, false)
+  }))
+  default = null
+}
+
 locals {
   containerDefinition = {
     name             = var.containerName
@@ -77,6 +85,7 @@ locals {
     portMappings = var.portMappings
     secrets      = var.secrets
     dependsOn    = var.dependsOn
+    volumesFrom  = var.volumesFrom
   }
 }
 
