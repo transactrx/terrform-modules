@@ -543,3 +543,21 @@ resource "aws_iam_role_policy" "allow_eventbridge_scheduler" {
   role   = aws_iam_role.github_actions.name
   policy = data.aws_iam_policy_document.allow_eventbridge_scheduler.json
 }
+
+data "aws_iam_policy_document" "allow_dynamodb_actions" {
+  version = "2012-10-17"
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "dynamodb:*"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "allow_dynamodb_actions" {
+  name   = "allow_dynamodb_actions"
+  role   = aws_iam_role.github_actions.name
+  policy = data.aws_iam_policy_document.allow_dynamodb_actions.json
+}
