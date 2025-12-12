@@ -507,3 +507,20 @@ resource "aws_iam_role_policy" "allow_globalaccelerator_permissions" {
   role   = aws_iam_role.github_actions.name  # Replace with your role name
 }
 
+data "aws_iam_policy_document" "allow_sqs_actions" {
+  version = "2012-10-17"
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "sqs:*"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "allow_sqs_actions" {
+  name   = "allow_sqs_actions"
+  role   = aws_iam_role.github_actions.name
+  policy = data.aws_iam_policy_document.allow_sqs_actions.json
+}
