@@ -524,3 +524,22 @@ resource "aws_iam_role_policy" "allow_sqs_actions" {
   role   = aws_iam_role.github_actions.name
   policy = data.aws_iam_policy_document.allow_sqs_actions.json
 }
+
+
+data "aws_iam_policy_document" "allow_eventbridge_scheduler" {
+  version = "2012-10-17"
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "scheduler:*"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "allow_eventbridge_scheduler" {
+  name   = "allow_eventbridge_scheduler"
+  role   = aws_iam_role.github_actions.name
+  policy = data.aws_iam_policy_document.allow_eventbridge_scheduler.json
+}
