@@ -65,6 +65,16 @@ variable "volumesFrom" {
   default = null
 }
 
+variable "ulimits" {
+  description = "Container ulimit settings. Useful for increasing file descriptor limits for high-connection workloads."
+  type = list(object({
+    name      = string
+    softLimit = number
+    hardLimit = number
+  }))
+  default = null
+}
+
 locals {
   containerDefinition = {
     name             = var.containerName
@@ -86,6 +96,7 @@ locals {
     secrets      = var.secrets
     dependsOn    = var.dependsOn
     volumesFrom  = var.volumesFrom
+    ulimits      = var.ulimits
   }
 }
 
