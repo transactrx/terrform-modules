@@ -98,6 +98,11 @@ variable "applicationLoadBalancerAttachment" {
     matcher             = optional(string)
     interval            = optional(number)
     timeout             = optional(number)
+    stickiness = optional(object({
+      enabled         = optional(bool, false)
+      type            = optional(string, "lb_cookie")
+      cookie_duration = optional(number, 86400)
+    }))
   })
 
   default = {
@@ -118,6 +123,7 @@ variable "applicationLoadBalancerAttachment" {
     matcher             = null
     interval            = null
     timeout             = null
+    stickiness          = null
   }
 }
 
@@ -228,6 +234,15 @@ resource "aws_lb_target_group" "albTargetGroup" {
     matcher             = try(var.applicationLoadBalancerAttachment.matcher, "200-399")
     interval            = try(var.applicationLoadBalancerAttachment.interval, 30)
     timeout             = try(var.applicationLoadBalancerAttachment.timeout, 5)
+  }
+
+  dynamic "stickiness" {
+    for_each = var.applicationLoadBalancerAttachment.stickiness != null ? [var.applicationLoadBalancerAttachment.stickiness] : []
+    content {
+      type            = stickiness.value.type
+      cookie_duration = stickiness.value.cookie_duration
+      enabled         = stickiness.value.enabled
+    }
   }
 
   vpc_id = var.vpc_id
