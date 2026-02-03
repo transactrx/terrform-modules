@@ -26,7 +26,7 @@ variable "mainImageURL" {
 }
 
 variable "addExtraFargateStorage" {
-  type = bool
+  type    = bool
   default = false
 }
 
@@ -44,7 +44,7 @@ variable "ecs_task_role_name" {
 
 
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name = var.ecs_execution_role_name != null ? var.ecs_execution_role_name : "${var.taskDefFamily}-ecs-execution-role"
+  name               = var.ecs_execution_role_name != null ? var.ecs_execution_role_name : "${var.taskDefFamily}-ecs-execution-role"
   assume_role_policy = <<EOF
 {
  "Version": "2012-10-17",
@@ -63,7 +63,7 @@ EOF
 }
 
 resource "aws_iam_role" "ecs_task_role" {
-  name = var.ecs_task_role_name != null ? var.ecs_task_role_name : "${var.taskDefFamily}-ecs-task-role"
+  name               = var.ecs_task_role_name != null ? var.ecs_task_role_name : "${var.taskDefFamily}-ecs-task-role"
   assume_role_policy = <<EOF
 {
  "Version": "2012-10-17",
@@ -75,6 +75,16 @@ resource "aws_iam_role" "ecs_task_role" {
      },
      "Effect": "Allow",
      "Sid": ""
+   },
+   {
+     "Effect": "Allow",
+     "Action": [
+       "ssmmessages:CreateControlChannel",
+       "ssmmessages:CreateDataChannel",
+       "ssmmessages:OpenControlChannel",
+       "ssmmessages:OpenDataChannel"
+     ],
+     "Resource": "*"
    }
  ]
 }
@@ -128,7 +138,7 @@ resource "aws_ecs_task_definition" "test" {
   network_mode             = "awsvpc"
   cpu                      = var.CPU
   memory                   = var.Memory
-  container_definitions    = replace(jsonencode(var.ContainerList),"$$MAIN_IMAGE$$",var.mainImageURL)
+  container_definitions    = replace(jsonencode(var.ContainerList), "$$MAIN_IMAGE$$", var.mainImageURL)
   runtime_platform {
     operating_system_family = var.Os
     cpu_architecture        = var.CPU_Arch
