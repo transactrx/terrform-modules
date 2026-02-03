@@ -15,6 +15,11 @@ variable "subNets" {
   type = list(string)
 }
 
+variable "enableExecuteCommand" {
+  type    = bool
+  default = false
+}
+
 variable "taskDefinitionFull" {}
 variable "desiredCount" {
   type = number
@@ -29,6 +34,7 @@ resource "aws_ecs_service" "pwl-tcp-server-test-ecs-service" {
   cluster                    = var.clusterName
   deployment_maximum_percent = var.deploymentMaxPercent
   desired_count              = var.desiredCount
+  enable_execute_command     = var.enableExecuteCommand
 
   dynamic "load_balancer" {
     for_each = aws_lb_target_group.nlbTargetGroup
@@ -68,7 +74,7 @@ data "aws_vpc" "vpc" {
 }
 
 locals {
-  containerPortsToBeOpen=distinct(var.networkLoadBalancerAttachments.*.containerPort)
+  containerPortsToBeOpen = distinct(var.networkLoadBalancerAttachments.*.containerPort)
 }
 
 resource "aws_security_group_rule" "sgRules" {
@@ -86,15 +92,15 @@ resource "aws_security_group_rule" "sgRules" {
 variable "networkLoadBalancerAttachments" {
   type = list(
     object({
-    containerName   = string
-    containerPort   = number
-    protocol        = string
-    lbArn           = string
-    lbPort          = number
-    certificateArn  = optional(string)
-    name            = optional(string)
-    healthCheckPort = optional(number)
-    alpn_policy     = optional(string)
+      containerName   = string
+      containerPort   = number
+      protocol        = string
+      lbArn           = string
+      lbPort          = number
+      certificateArn  = optional(string)
+      name            = optional(string)
+      healthCheckPort = optional(number)
+      alpn_policy     = optional(string)
   }))
   default = [{
     containerName   = null
@@ -122,7 +128,7 @@ resource "aws_lb_listener" "nlbListeners" {
   load_balancer_arn = var.networkLoadBalancerAttachments[count.index].lbArn
   port              = var.networkLoadBalancerAttachments[count.index].lbPort
   protocol          = var.networkLoadBalancerAttachments[count.index].protocol
-  certificate_arn   = lower(var.networkLoadBalancerAttachments[count.index].protocol)=="tcp"?null: var.networkLoadBalancerAttachments[count.index].certificateArn
+  certificate_arn   = lower(var.networkLoadBalancerAttachments[count.index].protocol) == "tcp" ? null : var.networkLoadBalancerAttachments[count.index].certificateArn
   alpn_policy       = var.networkLoadBalancerAttachments[count.index].alpn_policy
   default_action {
     type             = "forward"
@@ -134,13 +140,13 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
   count                = length(var.networkLoadBalancerAttachments)
   protocol             = var.ecs_service_protocol
   target_type          = "ip"
-  name                 = var.networkLoadBalancerAttachments[count.index].name!=null ? "${var.serviceName}-${var.networkLoadBalancerAttachments[count.index].name}" : "${var.serviceName}-${var.networkLoadBalancerAttachments[count.index].containerName}-${var.networkLoadBalancerAttachments[count.index].containerPort}"
+  name                 = var.networkLoadBalancerAttachments[count.index].name != null ? "${var.serviceName}-${var.networkLoadBalancerAttachments[count.index].name}" : "${var.serviceName}-${var.networkLoadBalancerAttachments[count.index].containerName}-${var.networkLoadBalancerAttachments[count.index].containerPort}"
   deregistration_delay = 120
   port                 = var.networkLoadBalancerAttachments[count.index].containerPort
   //  load_balancing_algorithm_type = "least_outstanding_requests"
-  slow_start           = 0
+  slow_start = 0
   dynamic "stickiness" {
-    for_each = var.networkLoadBalancerAttachments[count.index].protocol=="TLS"?[] : [
+    for_each = var.networkLoadBalancerAttachments[count.index].protocol == "TLS" ? [] : [
       0
     ]
     content {
@@ -150,7 +156,7 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
   }
   health_check {
     protocol            = "TCP"
-    port                =  var.networkLoadBalancerAttachments[count.index]==null?var.networkLoadBalancerAttachments[count.index].containerPort:var.networkLoadBalancerAttachments[count.index].healthCheckPort
+    port                = var.networkLoadBalancerAttachments[count.index] == null ? var.networkLoadBalancerAttachments[count.index].containerPort : var.networkLoadBalancerAttachments[count.index].healthCheckPort
     healthy_threshold   = 5
     unhealthy_threshold = 5
     enabled             = true
@@ -163,17 +169,17 @@ variable "auto_scaler_config" {
     max_capacity = optional(number, 10)
     min_capacity = optional(number, 1)
 
-    enable_cpu_scaling = optional(bool, false)
+    enable_cpu_scaling         = optional(bool, false)
     cpu_scale_out_target_value = optional(number, 80)
-    cpu_scale_in_target_value = optional(number, 60)
-    cpu_scale_in_cooldown = optional(number, 120)
-    cpu_scale_out_cooldown = optional(number, 120)
+    cpu_scale_in_target_value  = optional(number, 60)
+    cpu_scale_in_cooldown      = optional(number, 120)
+    cpu_scale_out_cooldown     = optional(number, 120)
 
-    enable_memory_scaling = optional(bool, false)
+    enable_memory_scaling      = optional(bool, false)
     mem_scale_out_target_value = optional(number, 80)
-    mem_scale_in_target_value = optional(number, 60)
-    mem_scale_in_cooldown = optional(number, 120)
-    mem_scale_out_cooldown = optional(number, 120)
+    mem_scale_in_target_value  = optional(number, 60)
+    mem_scale_in_cooldown      = optional(number, 120)
+    mem_scale_out_cooldown     = optional(number, 120)
   })
   default = {
     max_capacity               = 10
