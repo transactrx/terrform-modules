@@ -43,6 +43,7 @@ variable "ecs_task_role_name" {
 }
 
 
+
 resource "aws_iam_role" "ecs_task_execution_role" {
   name               = var.ecs_execution_role_name != null ? var.ecs_execution_role_name : "${var.taskDefFamily}-ecs-execution-role"
   assume_role_policy = <<EOF
@@ -75,16 +76,6 @@ resource "aws_iam_role" "ecs_task_role" {
      },
      "Effect": "Allow",
      "Sid": ""
-   },
-   {
-     "Effect": "Allow",
-     "Action": [
-       "ssmmessages:CreateControlChannel",
-       "ssmmessages:CreateDataChannel",
-       "ssmmessages:OpenControlChannel",
-       "ssmmessages:OpenDataChannel"
-     ],
-     "Resource": "*"
    }
  ]
 }
@@ -114,23 +105,36 @@ resource "aws_iam_role_policy" "secretsAccess" {
             "Resource": "arn:aws:secretsmanager:*:*:secret:*",
             "Effect": "Allow",
             "Sid": "secretsmanager"
-        },
-        {
-            "Action": [
-                "ssm:GetParameterHistory",
-                "ssm:GetParametersByPath",
-                "ssm:GetParameters",
-                "ssm:GetParameter"
-            ],
-            "Resource": "*",
-            "Effect": "Allow",
-            "Sid": "ssmparameters"
         }
     ]
 }
 EOF
   role   = aws_iam_role.ecs_task_execution_role.name
 }
+
+
+resource "aws_iam_role_policy" "ecs_exec" {
+  name = "ecs-exec"
+  role = aws_iam_role.ecs_task_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = [
+          "ssmmessages:CreateControlChannel",
+          "ssmmessages:CreateDataChannel",
+          "ssmmessages:OpenControlChannel",
+          "ssmmessages:OpenDataChannel"
+        ]
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+
 
 resource "aws_ecs_task_definition" "test" {
   family                   = var.taskDefFamily
