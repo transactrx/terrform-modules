@@ -75,6 +75,12 @@ variable "ulimits" {
   default = null
 }
 
+variable "stopTimeout" {
+  description = "Seconds to wait before the container is forcefully killed (SIGKILL) after SIGTERM. Max 120 for Fargate."
+  type    = number
+  default = null
+}
+
 locals {
   containerDefinition = {
     name             = var.containerName
@@ -97,6 +103,7 @@ locals {
     dependsOn    = var.dependsOn
     volumesFrom  = var.volumesFrom
     ulimits      = var.ulimits
+    stopTimeout  = var.stopTimeout
   }
 }
 
