@@ -98,6 +98,7 @@ variable "networkLoadBalancerAttachments" {
       lbArn           = string
       lbPort          = number
       certificateArn  = optional(string)
+      ssl_policy      = optional(string)
       name            = optional(string)
       healthCheckPort = optional(number)
       alpn_policy     = optional(string)
@@ -109,6 +110,7 @@ variable "networkLoadBalancerAttachments" {
     lbArn           = null
     lbPort          = null
     certificateArn  = null
+    ssl_policy      = null
     name            = null
     healthCheckPort = null
     alpn_policy     = null
@@ -123,12 +125,20 @@ variable "vpc_id" {
 variable "ecs_service_protocol" {
   default = "TLS"
 }
+
+variable "nlb_tls_policy" {
+  description = "Default SSL/TLS security policy for NLB TLS listeners."
+  type        = string
+  default     = "ELBSecurityPolicy-TLS13-1-2-2021-06"
+}
+
 resource "aws_lb_listener" "nlbListeners" {
   count             = length(var.networkLoadBalancerAttachments)
   load_balancer_arn = var.networkLoadBalancerAttachments[count.index].lbArn
   port              = var.networkLoadBalancerAttachments[count.index].lbPort
   protocol          = var.networkLoadBalancerAttachments[count.index].protocol
   certificate_arn   = lower(var.networkLoadBalancerAttachments[count.index].protocol) == "tcp" ? null : var.networkLoadBalancerAttachments[count.index].certificateArn
+  ssl_policy        = lower(var.networkLoadBalancerAttachments[count.index].protocol) == "tls" ? coalesce(var.networkLoadBalancerAttachments[count.index].ssl_policy, var.nlb_tls_policy) : null
   alpn_policy       = var.networkLoadBalancerAttachments[count.index].alpn_policy
   default_action {
     type             = "forward"
