@@ -167,8 +167,8 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
   health_check {
     protocol            = "TCP"
     port                = var.networkLoadBalancerAttachments[count.index].healthCheckPort == null ? var.networkLoadBalancerAttachments[count.index].containerPort : var.networkLoadBalancerAttachments[count.index].healthCheckPort
-    healthy_threshold   = 5
-    unhealthy_threshold = 5
+    healthy_threshold   = 3
+    unhealthy_threshold = 2
     enabled             = true
   }
   vpc_id = var.vpc_id
