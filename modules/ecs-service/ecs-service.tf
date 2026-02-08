@@ -30,11 +30,12 @@ data "aws_lb" "lb" {
 }
 
 resource "aws_ecs_service" "pwl-tcp-server-test-ecs-service" {
-  name                       = var.serviceName
-  cluster                    = var.clusterName
-  deployment_maximum_percent = var.deploymentMaxPercent
-  desired_count              = var.desiredCount
-  enable_execute_command     = var.enableExecuteCommand
+  name                              = var.serviceName
+  cluster                           = var.clusterName
+  deployment_maximum_percent        = var.deploymentMaxPercent
+  desired_count                     = var.desiredCount
+  enable_execute_command            = var.enableExecuteCommand
+  health_check_grace_period_seconds = 60
 
   dynamic "load_balancer" {
     for_each = aws_lb_target_group.nlbTargetGroup
