@@ -127,6 +127,12 @@ variable "applicationLoadBalancerAttachment" {
   }
 }
 
+variable "health_check_grace_period_seconds" {
+  description = "Seconds to wait before ECS acts on ALB health check failures (useful for slow-starting apps)"
+  type        = number
+  default     = 200
+}
+
 variable "alb_service_protocol" {
   description = "Protocol for the ALB target group and health check"
   type        = string
@@ -286,11 +292,12 @@ resource "aws_lb_listener_rule" "albListenerRule" {
 ###########################
 
 resource "aws_ecs_service" "ecs_service" {
-  name                       = var.serviceName
-  cluster                    = var.clusterName
-  deployment_maximum_percent = var.deploymentMaxPercent
-  desired_count              = var.desiredCount
-  task_definition            = var.taskDefinitionFull
+  name                              = var.serviceName
+  cluster                           = var.clusterName
+  deployment_maximum_percent        = var.deploymentMaxPercent
+  desired_count                     = var.desiredCount
+  task_definition                   = var.taskDefinitionFull
+  health_check_grace_period_seconds = var.health_check_grace_period_seconds
 
   dynamic "load_balancer" {
     for_each = aws_lb_target_group.albTargetGroup
