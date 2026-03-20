@@ -27,6 +27,11 @@ variable "origin_keepalive_timeout" {
   type = number
   default = 5
 }
+variable "origin_verify_secret" {
+  type        = string
+  default     = ""
+  description = "When non-empty, adds an X-Origin-Verify custom header to the origin with this value."
+}
 
 # CloudFront Distribution using the new policies
 # The `resource "aws_cloudfront_distribution" "proxy"` block is defining an AWS CloudFront distribution resource named "proxy".
@@ -35,6 +40,14 @@ resource "aws_cloudfront_distribution" "proxy" {
   origin {
     domain_name = var.desitination_domain # Fixed typo: "desitination_domain" -> "destination_domain"
     origin_id   = var.name
+
+    dynamic "custom_header" {
+      for_each = var.origin_verify_secret != "" ? [1] : []
+      content {
+        name  = "X-Origin-Verify"
+        value = var.origin_verify_secret
+      }
+    }
 
     custom_origin_config {
       http_port                = 80
