@@ -20,12 +20,18 @@ variable "waf_protection_arn" {
   type = string
 }
 variable "origin_read_timeout" {
-  type = number
+  type    = number
   default = 30
 }
 variable "origin_keepalive_timeout" {
-  type = number
+  type    = number
   default = 5
+}
+variable "GEO_ALLOWED_COUNTRIES" {
+
+  type    = list(string)
+  default = ["US"]
+
 }
 variable "origin_verify_secret" {
   type        = string
@@ -86,9 +92,7 @@ resource "aws_cloudfront_distribution" "proxy" {
   restrictions {
     geo_restriction {
       restriction_type = "whitelist" # Allow access from all locations
-      locations = [
-        "US",
-      ]
+      locations        = var.GEO_ALLOWED_COUNTRIES
     }
   }
 
