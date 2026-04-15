@@ -14,13 +14,16 @@ variable "instance_type" {
 variable "instance_count" {
   default = 1
 }
+variable "engine_version" {
+  default = "16.1"
+}
 
 
 
 resource "aws_rds_cluster" "aurora_postgres_cluster" {
   cluster_identifier          = "${var.name}-cluster"
   engine                      = "aurora-postgresql"
-  engine_version              = "16.1" # Specify the desired PostgreSQL version
+  engine_version              = var.engine_version
   database_name               = var.name
   master_username             = "sa"
   manage_master_user_password = true
