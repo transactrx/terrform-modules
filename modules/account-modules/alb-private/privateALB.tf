@@ -34,6 +34,18 @@ variable "manage_dns" {
   default = true
 }
 
+variable "access_logs_bucket" {
+  type    = string
+  default = ""
+  description = "S3 bucket for ALB access logs. Empty disables access logging."
+}
+
+variable "access_logs_prefix" {
+  type    = string
+  default = ""
+  description = "S3 key prefix for ALB access logs."
+}
+
 resource "aws_security_group" "ALBSecurityGroup" {
   name = var.albName
   description = "Security for the private Load Balancer"
@@ -69,6 +81,16 @@ resource "aws_lb" "alb" {
   subnets            = var.privateSubnets
   idle_timeout = 600
   enable_deletion_protection = true
+
+  dynamic "access_logs" {
+    for_each = var.access_logs_bucket != "" ? [1] : []
+    content {
+      bucket  = var.access_logs_bucket
+      prefix  = var.access_logs_prefix
+      enabled = true
+    }
+  }
+
   tags = {
     source = "terraform"
   }
