@@ -4,6 +4,11 @@ variable "desitination_domain" {
 variable "public_dns_name" {
   type = string
 }
+variable "additional_aliases" {
+  type        = list(string)
+  default     = []
+  description = "Extra alternate domain names (CNAMEs) to serve from this distribution, in addition to public_dns_name. The ACM certificate must cover all of them."
+}
 variable "name" {
   type = string
 }
@@ -65,7 +70,7 @@ resource "aws_cloudfront_distribution" "proxy" {
     }
   }
 
-  aliases = [var.public_dns_name]
+  aliases = concat([var.public_dns_name], var.additional_aliases)
 
   enabled             = true
   is_ipv6_enabled     = true
