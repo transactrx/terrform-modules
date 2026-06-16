@@ -15,6 +15,16 @@ variable "waf_protection_id" {
   type = string
 }
 
+# Optional: additional fully-qualified domain names to serve from this distribution,
+# in addition to public_dns_name. Defaults to an empty list so existing callers are
+# unaffected. NOTE: the certificate referenced by acm_certificate_arn must include
+# every name listed here as a Subject Alternative Name (SAN), otherwise CloudFront
+# will reject the alias.
+variable "additional_dns_names" {
+  type    = list(string)
+  default = []
+}
+
 
 # Origin Request Policy: Forward all headers, query strings, and cookies to the origin
 resource "aws_cloudfront_origin_request_policy" "all_policy" {
@@ -84,7 +94,7 @@ resource "aws_cloudfront_distribution" "proxy" {
   }
 
 
-  aliases = [var.public_dns_name]
+  aliases = concat([var.public_dns_name], var.additional_dns_names)
 
   enabled             = true
   is_ipv6_enabled     = true
@@ -145,6 +155,37 @@ resource "aws_route53_record" "cf_alias" {
     zone_id                = aws_cloudfront_distribution.proxy.hosted_zone_id
     evaluate_target_health = false
 
+  }
+}
+
+
+# Register each additional DNS name. Keyed by FQDN so adding/removing names
+# only affects that name's record. The public_dns_name is filtered out to avoid
+# colliding with the cf_alias record above if it is also listed here.
+locals {
+  additional_records = {
+    for fqdn in var.additional_dns_names : fqdn => {
+      zone_name = join(".", slice(split(".", fqdn), length(split(".", fqdn)) - 2, length(split(".", fqdn))))
+    } if fqdn != var.public_dns_name
+  }
+}
+
+data "aws_route53_zone" "additional" {
+  for_each     = local.additional_records
+  name         = each.value.zone_name
+  private_zone = false
+}
+
+resource "aws_route53_record" "cf_alias_additional" {
+  for_each = local.additional_records
+  zone_id  = data.aws_route53_zone.additional[each.key].zone_id
+  name     = each.key # full FQDN, e.g. "api.example.com"
+  type     = "A"
+
+  alias {
+    name                   = aws_cloudfront_distribution.proxy.domain_name
+    zone_id                = aws_cloudfront_distribution.proxy.hosted_zone_id
+    evaluate_target_health = false
   }
 }
 
