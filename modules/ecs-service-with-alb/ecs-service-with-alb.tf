@@ -34,10 +34,34 @@ variable "dnsName" {
   type = string
 }
 
+variable "additionalDnsNames" {
+  type        = list(string)
+  description = <<-EOT
+    Optional additional FQDNs that should map to this service (e.g. ["domain2.com", "domain3.com"]).
+    Each name is added to the listener rule's host-header match (OR semantics with dnsName) and gets
+    its own public Route53 A (alias) record. Each name may live in a different public hosted zone.
+    Leave empty for the original single-domain behavior.
+  EOT
+  default     = []
+}
+
 locals {
   # Split the FQDN into parts, then join the last two segments as the zone name.
   dns_parts = split(".", var.dnsName)
   zone_name = join(".", slice(local.dns_parts, length(local.dns_parts) - 2, length(local.dns_parts)))
+
+  # Per-domain zone name for each additional DNS name (last two labels of the FQDN).
+  additional_zone_names = {
+    for d in var.additionalDnsNames :
+    d => join(".", slice(split(".", d), length(split(".", d)) - 2, length(split(".", d))))
+  }
+
+  # Host-header values for the listener rule: the primary publicHostName plus any additional
+  # DNS names. ALB treats multiple values in one host_header condition as an OR match.
+  host_header_values = distinct(concat(
+    var.applicationLoadBalancerAttachment.publicHostName != null ? [var.applicationLoadBalancerAttachment.publicHostName] : [],
+    var.additionalDnsNames
+  ))
 }
 
 data "aws_route53_zone" "public" {
@@ -53,6 +77,27 @@ resource "aws_route53_record" "app_dns" {
   zone_id = data.aws_route53_zone.public.zone_id
   name    = var.dnsName
   type    = "A"
+
+  alias {
+    name                   = data.aws_lb.alb.dns_name
+    zone_id                = data.aws_lb.alb.zone_id
+    evaluate_target_health = false
+  }
+}
+
+# Public hosted zone lookup for each additional DNS name (each may be a different zone).
+data "aws_route53_zone" "additional" {
+  for_each     = toset(var.additionalDnsNames)
+  name         = local.additional_zone_names[each.value]
+  private_zone = false
+}
+
+# Alias A record for each additional DNS name, pointing at the same ALB.
+resource "aws_route53_record" "additional_dns" {
+  for_each = toset(var.additionalDnsNames)
+  zone_id  = data.aws_route53_zone.additional[each.value].zone_id
+  name     = each.value
+  type     = "A"
 
   alias {
     name                   = data.aws_lb.alb.dns_name
@@ -77,7 +122,7 @@ variable "applicationLoadBalancerAttachment" {
     healthCheckPath = optional(string)
     rulePriority    = optional(number)
     pathPattern     = optional(string)
-    publicHostName        = string
+    publicHostName  = string
   })
 
   default = {
@@ -91,7 +136,7 @@ variable "applicationLoadBalancerAttachment" {
     healthCheckPath = null,
     rulePriority    = null,
     pathPattern     = null,
-    publicHostName        = null,
+    publicHostName  = null,
     listenerArn     = null
   }
 }
@@ -242,12 +287,10 @@ resource "aws_lb_listener_rule" "albListenerRule" {
     }
   }
 
-  # Host header condition
+  # Host header condition (OR match across publicHostName + additionalDnsNames)
   condition {
     host_header {
-      values = [
-        var.applicationLoadBalancerAttachment.publicHostName
-      ]
+      values = local.host_header_values
     }
   }
 }
