@@ -26,8 +26,11 @@ jobs:
           ref: ${{ github.head_ref || github.ref_name }}
           fetch-depth: 0
 
-      - name: Create missing READMEs with markers
+      - name: Create missing READMEs and commit
         run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
           # Find all directories containing .tf files
           for dir in $(find modules -name "*.tf" -exec dirname {} \; | sort -u); do
             # Skip if README already exists
@@ -57,6 +60,13 @@ jobs:
           EOF
           done
 
+          # Commit new READMEs if any were created
+          git add .
+          if ! git diff --staged --quiet; then
+            git commit -m "docs: create missing README templates"
+            git push
+          fi
+
       - name: Find all module directories
         id: find-modules
         run: |
@@ -71,19 +81,5 @@ jobs:
           working-dir: ${{ steps.find-modules.outputs.dirs }}
           output-file: README.md
           output-method: inject
-          git-push: false
-
-      - name: Commit and push changes
-        run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
-
-          git add .
-
-          if git diff --staged --quiet; then
-            echo "No changes to commit"
-            exit 0
-          fi
-
-          git commit -m "docs: auto-generate terraform-docs"
-          git push
+          git-push: true
+          git-commit-message: "docs: auto-generate terraform-docs"
