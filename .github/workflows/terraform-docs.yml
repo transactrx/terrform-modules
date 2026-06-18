@@ -12,66 +12,77 @@ on:
     paths:
       - 'modules/**/*.tf'
 
+permissions:
+  contents: write
+
 jobs:
   docs:
     runs-on: ubuntu-latest
+    # Skip if PR is from a fork (can't push to fork branches)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          token: ${{ secrets.GITHUB_TOKEN }}
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
 
-      # Generate docs for top-level modules (excluding account-modules and cdspipeline parent dirs)
-      - name: Generate Terraform docs for top-level modules
+      - name: Create missing READMEs with markers
+        run: |
+          # Find all directories containing .tf files
+          for dir in $(find modules -name "*.tf" -exec dirname {} \; | sort -u); do
+            # Skip if README already exists
+            if [ -f "$dir/README.md" ]; then
+              continue
+            fi
+
+            # Get module name from directory
+            name=$(basename "$dir")
+
+            echo "Creating README for $dir"
+            cat > "$dir/README.md" << EOF
+          # $name
+
+          ## Usage
+
+          \`\`\`hcl
+          module "$name" {
+            source = "git::git@github.com:transactrx/terrform-modules.git//$dir"
+
+            # ... see inputs below
+          }
+          \`\`\`
+
+          <!-- BEGIN_TF_DOCS -->
+          <!-- END_TF_DOCS -->
+          EOF
+          done
+
+      - name: Find all module directories
+        id: find-modules
+        run: |
+          # Find directories with .tf files, format as comma-separated list
+          MODULES=$(find modules -name "*.tf" -exec dirname {} \; | sort -u | tr '\n' ',' | sed 's/,$//')
+          echo "dirs=$MODULES" >> $GITHUB_OUTPUT
+          echo "Found modules: $MODULES"
+
+      - name: Generate Terraform docs
         uses: terraform-docs/gh-actions@v1.3.0
         with:
-          working-dir: >-
-            modules/alb,
-            modules/cloudfront-to-private-alb,
-            modules/cloudfront-to-public-alb,
-            modules/codePiplineDependencies,
-            modules/container-definition,
-            modules/dsql-backup,
-            modules/dsql-cluster,
-            modules/dsql-service-endpoints,
-            modules/ecs-service,
-            modules/ecs-service-no-lb,
-            modules/ecs-service-with-alb,
-            modules/ecs-service-with-alb-v2,
-            modules/ecs-task,
-            modules/nlb,
-            modules/task-definition
+          working-dir: ${{ steps.find-modules.outputs.dirs }}
           output-file: README.md
           output-method: inject
           git-push: false
 
-      # Generate docs for account-modules child directories
-      - name: Generate Terraform docs for account-modules
-        uses: terraform-docs/gh-actions@v1.3.0
-        with:
-          working-dir: modules/account-modules
-          recursive: true
-          recursive-path: .
-          output-file: README.md
-          output-method: inject
-          git-push: false
-
-      # Generate docs for cdspipeline child directories
-      - name: Generate Terraform docs for cdspipeline
-        uses: terraform-docs/gh-actions@v1.3.0
-        with:
-          working-dir: modules/cdspipeline
-          recursive: true
-          recursive-path: .
-          output-file: README.md
-          output-method: inject
-          git-push: false
-
-      # Commit all changes at once
       - name: Commit and push changes
         run: |
-          git config --local user.email "github-actions[bot]@users.noreply.github.com"
-          git config --local user.name "github-actions[bot]"
-          git add -A
-          git diff --staged --quiet || git commit -m "docs: auto-generate terraform-docs"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          if git diff --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+
+          git add .
+          git commit -m "docs: auto-generate terraform-docs"
           git push
