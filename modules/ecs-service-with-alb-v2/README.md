@@ -1,4 +1,4 @@
-# ecs-service-with-target-group
+# ecs-service-with-alb-v2
 
 ECS service with ALB target group and flexible DNS/routing options. Use this module when you need control over whether DNS records and listener rules are created - for example, when routing through CloudFront or managing DNS externally.
 
@@ -17,7 +17,7 @@ ECS service with ALB target group and flexible DNS/routing options. Use this mod
 
 ```hcl
 module "api_service" {
-  source = "git::git@github.com:transactrx/terrform-modules.git//modules/ecs-service-with-target-group"
+  source = "git::git@github.com:transactrx/terrform-modules.git//modules/ecs-service-with-alb-v2"
 
   serviceName        = "my-api"
   clusterName        = "prod-cluster"
@@ -49,7 +49,7 @@ module "api_service" {
 
 ```hcl
 module "api_service" {
-  source = "git::git@github.com:transactrx/terrform-modules.git//modules/ecs-service-with-target-group"
+  source = "git::git@github.com:transactrx/terrform-modules.git//modules/ecs-service-with-alb-v2"
 
   serviceName        = "my-api"
   clusterName        = "prod-cluster"
@@ -82,7 +82,7 @@ module "api_service" {
 
 ```hcl
 module "api_service" {
-  source = "git::git@github.com:transactrx/terrform-modules.git//modules/ecs-service-with-target-group"
+  source = "git::git@github.com:transactrx/terrform-modules.git//modules/ecs-service-with-alb-v2"
 
   serviceName        = "my-api"
   clusterName        = "prod-cluster"
@@ -109,7 +109,7 @@ module "api_service" {
 
 This module is a superset of `ecs-service-with-alb`. To migrate:
 
-1. Change source to `ecs-service-with-target-group`
+1. Change source to `ecs-service-with-alb-v2`
 2. Replace `dnsName` with `hostnames = ["your-dns-name"]`
 3. Replace `additionalDnsNames` by adding to the `hostnames` list
 4. Remove `publicHostName` from `applicationLoadBalancerAttachment` (now derived from `hostnames`)

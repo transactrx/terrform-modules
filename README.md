@@ -20,9 +20,9 @@ module "example" {
 
 | Module | Description | When to Use |
 |--------|-------------|-------------|
-| [ecs-service-with-alb](./modules/ecs-service-with-alb) | ECS service with ALB listener rules and Route53 DNS | Standard web services with direct ALB routing |
-| [ecs-service-with-target-group](./modules/ecs-service-with-target-group) | ECS service with target group and optional routing/DNS | Services behind CloudFront, or when DNS/routing is managed elsewhere |
-| [ecs-service](./modules/ecs-service) | Basic ECS service with load balancer | Legacy - prefer `ecs-service-with-alb` |
+| [ecs-service-with-alb-v2](./modules/ecs-service-with-alb-v2) | ECS service with ALB, optional routing/DNS, configurable health checks | **Recommended** - new services, CloudFront origins, flexible routing |
+| [ecs-service-with-alb](./modules/ecs-service-with-alb) | ECS service with ALB listener rules and Route53 DNS | Existing services (migrate to v2 when convenient) |
+| [ecs-service](./modules/ecs-service) | Basic ECS service with load balancer | Legacy - prefer `ecs-service-with-alb-v2` |
 | [ecs-service-no-lb](./modules/ecs-service-no-lb) | ECS service without load balancer | Background workers, internal services |
 | [ecs-task](./modules/ecs-task) | ECS task definition | Standalone task definitions |
 | [task-definition](./modules/task-definition) | Task definition builder | Task definition construction |
