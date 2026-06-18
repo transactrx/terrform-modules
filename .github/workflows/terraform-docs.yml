@@ -21,13 +21,57 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Generate Terraform docs
+      # Generate docs for top-level modules (excluding account-modules and cdspipeline parent dirs)
+      - name: Generate Terraform docs for top-level modules
         uses: terraform-docs/gh-actions@v1.3.0
         with:
-          working-dir: modules
+          working-dir: >-
+            modules/alb,
+            modules/cloudfront-to-private-alb,
+            modules/cloudfront-to-public-alb,
+            modules/codePiplineDependencies,
+            modules/container-definition,
+            modules/dsql-backup,
+            modules/dsql-cluster,
+            modules/dsql-service-endpoints,
+            modules/ecs-service,
+            modules/ecs-service-no-lb,
+            modules/ecs-service-with-alb,
+            modules/ecs-service-with-alb-v2,
+            modules/ecs-task,
+            modules/nlb,
+            modules/task-definition
+          output-file: README.md
+          output-method: inject
+          git-push: false
+
+      # Generate docs for account-modules child directories
+      - name: Generate Terraform docs for account-modules
+        uses: terraform-docs/gh-actions@v1.3.0
+        with:
+          working-dir: modules/account-modules
           recursive: true
           recursive-path: .
           output-file: README.md
           output-method: inject
-          git-push: true
-          git-commit-message: "docs: auto-generate terraform-docs"
+          git-push: false
+
+      # Generate docs for cdspipeline child directories
+      - name: Generate Terraform docs for cdspipeline
+        uses: terraform-docs/gh-actions@v1.3.0
+        with:
+          working-dir: modules/cdspipeline
+          recursive: true
+          recursive-path: .
+          output-file: README.md
+          output-method: inject
+          git-push: false
+
+      # Commit all changes at once
+      - name: Commit and push changes
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add -A
+          git diff --staged --quiet || git commit -m "docs: auto-generate terraform-docs"
+          git push
