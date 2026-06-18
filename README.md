@@ -24,6 +24,7 @@ module "example" {
 | [ecs-service-with-alb](./modules/ecs-service-with-alb) | ECS service with ALB listener rules and Route53 DNS | Existing services (migrate to v2 when convenient) |
 | [ecs-service](./modules/ecs-service) | Basic ECS service with load balancer | Legacy - prefer `ecs-service-with-alb-v2` |
 | [ecs-service-no-lb](./modules/ecs-service-no-lb) | ECS service without load balancer | Background workers, internal services |
+| [ecs-service_old](./modules/ecs-service_old) | Deprecated ECS service module | **Deprecated** - do not use for new services |
 | [ecs-task](./modules/ecs-task) | ECS task definition | Standalone task definitions |
 | [task-definition](./modules/task-definition) | Task definition builder | Task definition construction |
 | [container-definition](./modules/container-definition) | Container definition builder | Container definition JSON |
