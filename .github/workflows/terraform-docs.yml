@@ -1,0 +1,33 @@
+name: Generate Terraform Docs
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'modules/**/*.tf'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'modules/**/*.tf'
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate Terraform docs
+        uses: terraform-docs/gh-actions@v1.3.0
+        with:
+          working-dir: modules
+          recursive: true
+          recursive-path: .
+          output-file: README.md
+          output-method: inject
+          git-push: true
+          git-commit-message: "docs: auto-generate terraform-docs"
