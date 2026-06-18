@@ -78,11 +78,12 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           git config --global user.name "github-actions[bot]"
 
-          if git diff --quiet; then
+          git add .
+
+          if git diff --staged --quiet; then
             echo "No changes to commit"
             exit 0
           fi
 
-          git add .
           git commit -m "docs: auto-generate terraform-docs"
           git push
