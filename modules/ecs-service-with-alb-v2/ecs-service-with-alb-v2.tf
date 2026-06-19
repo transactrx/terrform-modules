@@ -356,10 +356,11 @@ data "aws_route53_zone" "hostname_zones" {
 ###########################
 
 resource "aws_route53_record" "hostname_dns" {
-  for_each = local.dns_alias_target != null ? toset(var.dns_hostnames) : toset([])
-  zone_id  = data.aws_route53_zone.hostname_zones[each.value].zone_id
-  name     = each.value
-  type     = "A"
+  for_each        = local.dns_alias_target != null ? toset(var.dns_hostnames) : toset([])
+  zone_id         = data.aws_route53_zone.hostname_zones[each.value].zone_id
+  name            = each.value
+  type            = "A"
+  allow_overwrite = true
 
   alias {
     name                   = local.dns_alias_target.dns_name
