@@ -47,10 +47,8 @@ variable "vpc_id" {
 variable "hostnames" {
   type        = list(string)
   description = <<-EOT
-    Hostnames this service responds to. Used for:
-    1. Listener rule host-header matching (when create_listener_rule is true)
-    2. Route53 A records (when create_dns_records is true)
-    Each hostname may be in a different Route53 hosted zone.
+    Hostnames for ALB listener rule host-header matching (when create_listener_rule is true).
+    For Route53 DNS records, use the separate 'dns_hostnames' variable.
     Example: ["api.example.com", "api.legacy.com"]
   EOT
   default     = []
@@ -62,10 +60,15 @@ variable "create_listener_rule" {
   default     = true
 }
 
-variable "create_dns_records" {
-  type        = bool
-  description = "Whether to create Route53 DNS records for the hostnames. Set to false if DNS is managed elsewhere."
-  default     = true
+variable "dns_hostnames" {
+  type        = list(string)
+  description = <<-EOT
+    Hostnames to create Route53 A records for. Separate from 'hostnames' which is used
+    for listener rule host-header matching. Use this when you need DNS records for a
+    subset of hostnames (e.g., only the internal ALB hostname, while CloudFront manages others).
+    Leave empty to skip DNS record creation entirely.
+  EOT
+  default     = []
 }
 
 # Validation moved to locals to provide clear error messages at plan time
@@ -93,7 +96,7 @@ variable "applicationLoadBalancerAttachment" {
     - protocol: Protocol for the target group (HTTP or HTTPS)
 
     Conditionally required:
-    - lbArn: ALB ARN. Required when create_dns_records=true and dns_target is not set
+    - lbArn: ALB ARN. Required when dns_hostnames is non-empty and dns_target is not set
     - listenerArn: ALB listener ARN. Required when create_listener_rule=true
 
     Optional fields:
@@ -279,11 +282,11 @@ variable "auto_scaler_config" {
 
 locals {
   # Determine if we need to look up the ALB (for DNS records when no override provided)
-  lookup_alb = var.create_dns_records && var.dns_target == null && length(var.hostnames) > 0
+  lookup_alb = length(var.dns_hostnames) > 0 && var.dns_target == null
 
-  # Per-hostname zone name (last two labels of each FQDN)
-  hostname_zone_names = {
-    for h in var.hostnames :
+  # Per-hostname zone name (last two labels of each FQDN) for DNS records
+  dns_hostname_zone_names = {
+    for h in var.dns_hostnames :
     h => join(".", slice(split(".", h), length(split(".", h)) - 2, length(split(".", h))))
   }
 
@@ -323,7 +326,7 @@ locals {
 
   validate_lb_arn = (
     local.lookup_alb && var.applicationLoadBalancerAttachment.lbArn == null
-    ? tobool("ERROR: lbArn is required in applicationLoadBalancerAttachment when create_dns_records is true and dns_target is not provided")
+    ? tobool("ERROR: lbArn is required in applicationLoadBalancerAttachment when dns_hostnames is non-empty and dns_target is not provided")
     : true
   )
 }
@@ -341,10 +344,10 @@ data "aws_lb" "alb" {
   arn   = var.applicationLoadBalancerAttachment.lbArn
 }
 
-# Hosted zone lookup for each hostname (only when creating DNS and no override target)
+# Hosted zone lookup for each dns_hostname
 data "aws_route53_zone" "hostname_zones" {
-  for_each     = var.create_dns_records && length(var.hostnames) > 0 ? toset(var.hostnames) : toset([])
-  name         = local.hostname_zone_names[each.value]
+  for_each     = length(var.dns_hostnames) > 0 ? toset(var.dns_hostnames) : toset([])
+  name         = local.dns_hostname_zone_names[each.value]
   private_zone = false
 }
 
@@ -353,7 +356,7 @@ data "aws_route53_zone" "hostname_zones" {
 ###########################
 
 resource "aws_route53_record" "hostname_dns" {
-  for_each = var.create_dns_records && local.dns_alias_target != null ? toset(var.hostnames) : toset([])
+  for_each = local.dns_alias_target != null ? toset(var.dns_hostnames) : toset([])
   zone_id  = data.aws_route53_zone.hostname_zones[each.value].zone_id
   name     = each.value
   type     = "A"
