@@ -1,0 +1,85 @@
+name: Generate Terraform Docs
+
+on:
+  push:
+    branches:
+      - master
+    paths:
+      - 'modules/**/*.tf'
+  pull_request:
+    branches:
+      - master
+    paths:
+      - 'modules/**/*.tf'
+
+permissions:
+  contents: write
+
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    # Skip if PR is from a fork (can't push to fork branches)
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref || github.ref_name }}
+          fetch-depth: 0
+
+      - name: Create missing READMEs and commit
+        run: |
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          # Find all directories containing .tf files
+          for dir in $(find modules -name "*.tf" -exec dirname {} \; | sort -u); do
+            # Skip if README already exists
+            if [ -f "$dir/README.md" ]; then
+              continue
+            fi
+
+            # Get module name from directory
+            name=$(basename "$dir")
+
+            echo "Creating README for $dir"
+            cat > "$dir/README.md" << EOF
+          # $name
+
+          ## Usage
+
+          \`\`\`hcl
+          module "$name" {
+            source = "git::git@github.com:transactrx/terrform-modules.git//$dir"
+
+            # ... see inputs below
+          }
+          \`\`\`
+
+          <!-- BEGIN_TF_DOCS -->
+          <!-- END_TF_DOCS -->
+          EOF
+          done
+
+          # Commit new READMEs if any were created
+          git add .
+          if ! git diff --staged --quiet; then
+            git commit -m "docs: create missing README templates"
+            git push
+          fi
+
+      - name: Find all module directories
+        id: find-modules
+        run: |
+          # Find directories with .tf files, format as comma-separated list
+          MODULES=$(find modules -name "*.tf" -exec dirname {} \; | sort -u | tr '\n' ',' | sed 's/,$//')
+          echo "dirs=$MODULES" >> $GITHUB_OUTPUT
+          echo "Found modules: $MODULES"
+
+      - name: Generate Terraform docs
+        uses: terraform-docs/gh-actions@v1.3.0
+        with:
+          working-dir: ${{ steps.find-modules.outputs.dirs }}
+          output-file: README.md
+          output-method: inject
+          git-push: true
+          git-commit-message: "docs: auto-generate terraform-docs"
