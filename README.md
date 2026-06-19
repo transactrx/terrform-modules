@@ -38,10 +38,11 @@ module "example" {
 
 ### CloudFront
 
-| Module | Description |
-|--------|-------------|
-| [cloudfront-to-public-alb](./modules/cloudfront-to-public-alb) | CloudFront distribution with public ALB origin |
-| [cloudfront-to-private-alb](./modules/cloudfront-to-private-alb) | CloudFront distribution with private ALB origin |
+| Module | Description | When to Use |
+|--------|-------------|-------------|
+| [cloudfront-to-public-alb-v2](./modules/cloudfront-to-public-alb-v2) | CloudFront with separate alias/DNS control, safe migration | **Recommended** - new distributions, migrating existing DNS |
+| [cloudfront-to-public-alb](./modules/cloudfront-to-public-alb) | CloudFront distribution with public ALB origin | Existing distributions (migrate to v2 when convenient) |
+| [cloudfront-to-private-alb](./modules/cloudfront-to-private-alb) | CloudFront distribution with private ALB origin | Private ALB origins |
 
 ### Database (DSQL)
 
