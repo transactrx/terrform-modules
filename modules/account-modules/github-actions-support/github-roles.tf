@@ -25,7 +25,8 @@ data "aws_iam_policy_document" "github_actions_assume_role" {
       test     = "StringLike"
       variable = "token.actions.githubusercontent.com:sub"
       values = [
-        "repo:transactrx/*:${var.branch_name}*"
+        "repo:transactrx/*:${var.branch_name}*",              # legacy mutable subject (repos created before 2026-04-23)
+        "repo:transactrx@3543463/*:${var.branch_name}*"       # immutable subject (repos created after; 3543463 = transactrx org id, constant)
       ]
     }
   }
