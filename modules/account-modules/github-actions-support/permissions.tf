@@ -41,7 +41,15 @@ data "aws_iam_policy_document" "allow_ecs_autoscaling_config" {
       "cloudwatch:DeleteAlarms",
       "cloudwatch:DescribeAlarms",
       "cloudwatch:GetMetricStatistics",
-      "cloudwatch:SetAlarmState"
+      "cloudwatch:SetAlarmState",
+      # AWS provider v5+ manages tags on every taggable resource: it calls
+      # ListTagsForResource after creating/refreshing an aws_cloudwatch_metric_alarm
+      # and Tag/UntagResource to reconcile tags on later applies. Without these,
+      # any workflow whose terraform manages a CloudWatch alarm fails with
+      # AccessDenied on the post-create tag read.
+      "cloudwatch:ListTagsForResource",
+      "cloudwatch:TagResource",
+      "cloudwatch:UntagResource"
     ]
     resources = ["*"]
   }
@@ -452,8 +460,8 @@ data "aws_iam_policy_document" "allow-lambda-invoke" {
   version = "2012-10-17"
 
   statement {
-    sid     = "AllowInvokeAlbSequenceLambdasAllEnv"
-    effect  = "Allow"
+    sid    = "AllowInvokeAlbSequenceLambdasAllEnv"
+    effect = "Allow"
     actions = [
       "lambda:*"
     ]
@@ -504,7 +512,7 @@ data "aws_iam_policy_document" "allow_globalaccelerator_permissions" {
 resource "aws_iam_role_policy" "allow_globalaccelerator_permissions" {
   name   = "allow-globalaccelerator-permissions"
   policy = data.aws_iam_policy_document.allow_globalaccelerator_permissions.json
-  role   = aws_iam_role.github_actions.name  # Replace with your role name
+  role   = aws_iam_role.github_actions.name # Replace with your role name
 }
 
 data "aws_iam_policy_document" "allow_sqs_actions" {
