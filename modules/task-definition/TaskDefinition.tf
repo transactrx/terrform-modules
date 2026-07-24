@@ -30,6 +30,16 @@ variable "addExtraFargateStorage" {
   default = false
 }
 
+variable "efsVolumes" {
+  description = "EFS volumes to attach to the task. Containers reference them by name via mountPoints. Transit encryption is always on; when accessPointId is set, IAM authorization is enabled (grant the task role elasticfilesystem:ClientMount/ClientWrite on the filesystem)."
+  type = list(object({
+    name          = string
+    fileSystemId  = string
+    accessPointId = optional(string)
+  }))
+  default = []
+}
+
 variable "ecs_execution_role_name" {
   description = "Override for ECS Task Execution Role name"
   type        = string
@@ -156,6 +166,24 @@ resource "aws_ecs_task_definition" "test" {
     for_each = var.addExtraFargateStorage ? [1] : []
     content {
       size_in_gib = 200
+    }
+  }
+
+  dynamic "volume" {
+    for_each = var.efsVolumes
+    content {
+      name = volume.value.name
+      efs_volume_configuration {
+        file_system_id     = volume.value.fileSystemId
+        transit_encryption = "ENABLED"
+        dynamic "authorization_config" {
+          for_each = volume.value.accessPointId != null ? [1] : []
+          content {
+            access_point_id = volume.value.accessPointId
+            iam             = "ENABLED"
+          }
+        }
+      }
     }
   }
 }

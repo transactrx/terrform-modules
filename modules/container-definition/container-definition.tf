@@ -44,7 +44,7 @@ variable "logGroup" {
   default = ""
 }
 variable "logIsBlocking" {
-  type = bool
+  type    = bool
   default = false
 }
 data "aws_region" "current" {}
@@ -53,6 +53,16 @@ variable "dependsOn" {
   type = list(object({
     condition     = string
     containerName = string
+  }))
+  default = null
+}
+
+variable "mountPoints" {
+  description = "Volume mount points (volumes are declared on the task definition, e.g. via efsVolumes)."
+  type = list(object({
+    sourceVolume  = string
+    containerPath = string
+    readOnly      = optional(bool, false)
   }))
   default = null
 }
@@ -77,24 +87,24 @@ variable "ulimits" {
 
 variable "stopTimeout" {
   description = "Seconds to wait before the container is forcefully killed (SIGKILL) after SIGTERM. Max 120 for Fargate."
-  type    = number
-  default = null
+  type        = number
+  default     = null
 }
 
 locals {
   containerDefinition = {
-    name             = var.containerName
-    image            = var.imageURL
-    cpu              = var.cpu
-    memory           = var.memory
-    essential        = var.essential
-    logConfiguration = var.logGroup==""?null : {
+    name      = var.containerName
+    image     = var.imageURL
+    cpu       = var.cpu
+    memory    = var.memory
+    essential = var.essential
+    logConfiguration = var.logGroup == "" ? null : {
       logDriver = "awslogs"
-      options   = {
+      options = {
         awslogs-group         = var.logGroup
         awslogs-region        = data.aws_region.current.region
         awslogs-stream-prefix = var.containerName
-        mode = var.logIsBlocking ? "blocking":"non-blocking"
+        mode                  = var.logIsBlocking ? "blocking" : "non-blocking"
       }
     }
     environment  = var.envVariables
@@ -102,6 +112,7 @@ locals {
     secrets      = var.secrets
     dependsOn    = var.dependsOn
     volumesFrom  = var.volumesFrom
+    mountPoints  = var.mountPoints
     ulimits      = var.ulimits
     stopTimeout  = var.stopTimeout
   }
