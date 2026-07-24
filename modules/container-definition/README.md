@@ -46,6 +46,7 @@ No modules.
 | <a name="input_logGroup"></a> [logGroup](#input\_logGroup) | n/a | `string` | `""` | no |
 | <a name="input_logIsBlocking"></a> [logIsBlocking](#input\_logIsBlocking) | n/a | `bool` | `false` | no |
 | <a name="input_memory"></a> [memory](#input\_memory) | n/a | `number` | n/a | yes |
+| <a name="input_mountPoints"></a> [mountPoints](#input\_mountPoints) | Volume mount points (volumes are declared on the task definition, e.g. via efsVolumes). | <pre>list(object({<br/>    sourceVolume  = string<br/>    containerPath = string<br/>    readOnly      = optional(bool, false)<br/>  }))</pre> | `null` | no |
 | <a name="input_portMappings"></a> [portMappings](#input\_portMappings) | n/a | <pre>list(object({<br/>    containerPort = number<br/>    protocol      = optional(string, "tcp")<br/>  }))</pre> | `null` | no |
 | <a name="input_secrets"></a> [secrets](#input\_secrets) | n/a | <pre>list(object({<br/>    valueFrom = string<br/>    name      = string<br/>  }))</pre> | `null` | no |
 | <a name="input_stopTimeout"></a> [stopTimeout](#input\_stopTimeout) | Seconds to wait before the container is forcefully killed (SIGKILL) after SIGTERM. Max 120 for Fargate. | `number` | `null` | no |
