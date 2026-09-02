@@ -4,7 +4,7 @@ resource "aws_ecs_task_definition" "service" {
   container_definitions = jsonencode([
     {
       name      = var.name
-      image     = "twingate/connector:1"
+      image     = local.twingate_connector_image # current release of the tracked tag, resolved at plan time (connector-image.tf)
       cpu       = 512
       memory    = 512
       essential = true
