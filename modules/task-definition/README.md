@@ -71,6 +71,7 @@ No modules.
 | <a name="input_ecs_execution_role_name"></a> [ecs\_execution\_role\_name](#input\_ecs\_execution\_role\_name) | Override for ECS Task Execution Role name | `string` | `null` | no |
 | <a name="input_ecs_task_role_name"></a> [ecs\_task\_role\_name](#input\_ecs\_task\_role\_name) | Override for ECS Task Execution Role name | `string` | `null` | no |
 | <a name="input_efsVolumes"></a> [efsVolumes](#input\_efsVolumes) | EFS volumes to attach to the task. Containers reference them by name via mountPoints. Transit encryption is always on; when accessPointId is set, IAM authorization is enabled (grant the task role elasticfilesystem:ClientMount/ClientWrite on the filesystem). | <pre>list(object({<br/>    name          = string<br/>    fileSystemId  = string<br/>    accessPointId = optional(string)<br/>  }))</pre> | `[]` | no |
+| <a name="input_existing_task_role_arn"></a> [existing\_task\_role\_arn](#input\_existing\_task\_role\_arn) | Optional existing IAM task role. Its owner manages all trust and permissions, including ECS Exec. Null preserves the module-managed role. | `string` | `null` | no |
 | <a name="input_mainImageURL"></a> [mainImageURL](#input\_mainImageURL) | n/a | `string` | n/a | yes |
 | <a name="input_taskDefFamily"></a> [taskDefFamily](#input\_taskDefFamily) | n/a | `any` | n/a | yes |
 
