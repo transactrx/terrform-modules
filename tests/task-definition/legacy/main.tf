@@ -74,7 +74,6 @@ EOF
 }
 
 resource "aws_iam_role" "ecs_task_role" {
-  count              = var.existing_task_role_arn == null ? 1 : 0
   name               = var.ecs_task_role_name != null ? var.ecs_task_role_name : "${var.taskDefFamily}-ecs-task-role"
   assume_role_policy = <<EOF
 {
@@ -125,9 +124,8 @@ EOF
 
 
 resource "aws_iam_role_policy" "ecs_exec" {
-  count = var.existing_task_role_arn == null ? 1 : 0
-  name  = "ecs-exec"
-  role  = aws_iam_role.ecs_task_role[0].id
+  name = "ecs-exec"
+  role = aws_iam_role.ecs_task_role.id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -159,7 +157,7 @@ resource "aws_ecs_task_definition" "test" {
     operating_system_family = var.Os
     cpu_architecture        = var.CPU_Arch
   }
-  task_role_arn      = local.task_role_arn
+  task_role_arn      = aws_iam_role.ecs_task_role.arn
   execution_role_arn = aws_iam_role.ecs_task_execution_role.arn
 
   skip_destroy = true
@@ -196,11 +194,11 @@ output "taskDefArn" {
 }
 
 output "task_role_arn" {
-  value = local.task_role_arn
+  value = aws_iam_role.ecs_task_role.arn
 }
 
 output "task_role_name" {
-  value = local.task_role_name
+  value = aws_iam_role.ecs_task_role.name
 }
 
 output "execution_role_arn" {
@@ -213,29 +211,4 @@ output "execution_role_name" {
 
 output "task_definition_full_path" {
   value = "${aws_ecs_task_definition.test.family}:${aws_ecs_task_definition.test.revision}"
-}
-
-variable "existing_task_role_arn" {
-  description = "Optional existing IAM task role. Its owner manages all trust and permissions, including ECS Exec. Null preserves the module-managed role."
-  type        = string
-  default     = null
-  validation {
-    condition     = var.existing_task_role_arn == null ? true : can(regex("^arn:[^:]+:iam::[0-9]{12}:role/[^/]+(/[^/]+)*$", var.existing_task_role_arn))
-    error_message = "existing_task_role_arn must be null or an IAM role ARN."
-  }
-}
-
-locals {
-  task_role_arn  = var.existing_task_role_arn != null ? var.existing_task_role_arn : aws_iam_role.ecs_task_role[0].arn
-  task_role_name = var.existing_task_role_arn != null ? element(reverse(split("/", var.existing_task_role_arn)), 0) : aws_iam_role.ecs_task_role[0].name
-}
-
-# Keep these migrations permanently: consumers can upgrade from any older release.
-moved {
-  from = aws_iam_role.ecs_task_role
-  to   = aws_iam_role.ecs_task_role[0]
-}
-moved {
-  from = aws_iam_role_policy.ecs_exec
-  to   = aws_iam_role_policy.ecs_exec[0]
 }

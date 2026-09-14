@@ -1,0 +1,18 @@
+name: Task definition compatibility
+on:
+  pull_request:
+    paths: ['modules/task-definition/**', 'tests/task-definition/**', '.github/workflows/task-definition-test.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.16.2
+      - run: terraform -chdir=tests/task-definition init -backend=false
+      - run: terraform -chdir=tests/task-definition test -verbose -json > compatibility.json
+      - run: python3 tests/task-definition/check-plan.py compatibility.json

@@ -12,6 +12,27 @@ module "task_def" {
 }
 ```
 
+## Existing task roles and upgrades
+
+`existing_task_role_arn` defaults to `null`. Omit it to retain the existing role names,
+execution role, ECS Exec policy and outputs. Terraform 1.1 or newer applies the permanent
+`moved` blocks without replacing the managed role or policy.
+
+Supply an IAM role ARN to use a role owned by another state. The module does not read,
+create or manage that role or any of its policies. Its owner must configure ECS task
+trust, application permissions and ECS Exec. Execution-role behavior is unchanged.
+`task_role_name` returns the final role name even when the ARN contains an IAM path.
+
+**Switching an existing deployment:** changing to an external ARN would normally destroy
+the module-managed task role and ECS Exec policy. First transfer them to explicit retained
+resources with `moved` blocks, or back up state and remove those two addresses from state
+if they are intentionally unmanaged. Review a plan with no IAM deletions before applying.
+Do not remove rollback roles while active or rollback task definitions need them. Switching
+back requires moving/importing the retained resources into the module again.
+
+The mocked compatibility suite is in `tests/task-definition`; it applies the exact legacy
+module, plans an unchanged consumer upgrade in the same state, and exercises external roles.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -50,6 +71,7 @@ No modules.
 | <a name="input_ecs_execution_role_name"></a> [ecs\_execution\_role\_name](#input\_ecs\_execution\_role\_name) | Override for ECS Task Execution Role name | `string` | `null` | no |
 | <a name="input_ecs_task_role_name"></a> [ecs\_task\_role\_name](#input\_ecs\_task\_role\_name) | Override for ECS Task Execution Role name | `string` | `null` | no |
 | <a name="input_efsVolumes"></a> [efsVolumes](#input\_efsVolumes) | EFS volumes to attach to the task. Containers reference them by name via mountPoints. Transit encryption is always on; when accessPointId is set, IAM authorization is enabled (grant the task role elasticfilesystem:ClientMount/ClientWrite on the filesystem). | <pre>list(object({<br/>    name          = string<br/>    fileSystemId  = string<br/>    accessPointId = optional(string)<br/>  }))</pre> | `[]` | no |
+| <a name="input_existing_task_role_arn"></a> [existing\_task\_role\_arn](#input\_existing\_task\_role\_arn) | Optional existing IAM task role. Its owner manages all trust and permissions, including ECS Exec. Null preserves the module-managed role. | `string` | `null` | no |
 | <a name="input_mainImageURL"></a> [mainImageURL](#input\_mainImageURL) | n/a | `string` | n/a | yes |
 | <a name="input_taskDefFamily"></a> [taskDefFamily](#input\_taskDefFamily) | n/a | `any` | n/a | yes |
 
