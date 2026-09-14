@@ -1,5 +1,4 @@
-
-.idea/misc.xml
-.idea/modules.xml
-.idea/terrform-modules.iml
-.idea/vcs.xml
+**/.terraform/
+*.tfstate
+*.tfstate.*
+compatibility.json

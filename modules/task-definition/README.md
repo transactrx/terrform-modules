@@ -12,6 +12,27 @@ module "task_def" {
 }
 ```
 
+## Existing task roles and upgrades
+
+`existing_task_role_arn` defaults to `null`. Omit it to retain the existing role names,
+execution role, ECS Exec policy and outputs. Terraform 1.1 or newer applies the permanent
+`moved` blocks without replacing the managed role or policy.
+
+Supply an IAM role ARN to use a role owned by another state. The module does not read,
+create or manage that role or any of its policies. Its owner must configure ECS task
+trust, application permissions and ECS Exec. Execution-role behavior is unchanged.
+`task_role_name` returns the final role name even when the ARN contains an IAM path.
+
+**Switching an existing deployment:** changing to an external ARN would normally destroy
+the module-managed task role and ECS Exec policy. First transfer them to explicit retained
+resources with `moved` blocks, or back up state and remove those two addresses from state
+if they are intentionally unmanaged. Review a plan with no IAM deletions before applying.
+Do not remove rollback roles while active or rollback task definitions need them. Switching
+back requires moving/importing the retained resources into the module again.
+
+The mocked compatibility suite is in `tests/task-definition`; it applies the exact legacy
+module, plans an unchanged consumer upgrade in the same state, and exercises external roles.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
