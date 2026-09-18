@@ -38,10 +38,14 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_additional_ingress_cidrs"></a> [additional\_ingress\_cidrs](#input\_additional\_ingress\_cidrs) | CIDRs allowed to reach PostgreSQL on 5432 in addition to the VPC CIDR. | `list(string)` | `[]` | no |
+| <a name="input_backup_retention_period"></a> [backup\_retention\_period](#input\_backup\_retention\_period) | Days of automated backups to retain. Null leaves the cluster's current value unmanaged (AWS defaults new clusters to 1). | `number` | `null` | no |
 | <a name="input_engine_version"></a> [engine\_version](#input\_engine\_version) | n/a | `string` | `"16.1"` | no |
 | <a name="input_instance_count"></a> [instance\_count](#input\_instance\_count) | n/a | `number` | `1` | no |
 | <a name="input_instance_type"></a> [instance\_type](#input\_instance\_type) | n/a | `string` | `"db.r7g.large"` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `any` | n/a | yes |
+| <a name="input_performance_insights_enabled"></a> [performance\_insights\_enabled](#input\_performance\_insights\_enabled) | Enable RDS Performance Insights on the cluster instances. Null leaves the current value unmanaged. | `bool` | `null` | no |
+| <a name="input_performance_insights_retention_period"></a> [performance\_insights\_retention\_period](#input\_performance\_insights\_retention\_period) | Days to retain Performance Insights data (7, or a multiple of 31 up to 731). Null uses the AWS default. | `number` | `null` | no |
 | <a name="input_subnet_ids"></a> [subnet\_ids](#input\_subnet\_ids) | n/a | `list(string)` | n/a | yes |
 | <a name="input_vpc_cidr"></a> [vpc\_cidr](#input\_vpc\_cidr) | n/a | `any` | n/a | yes |
 | <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | The VPC ID | `any` | n/a | yes |

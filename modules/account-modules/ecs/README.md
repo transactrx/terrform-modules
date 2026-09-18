@@ -36,6 +36,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_container_insights"></a> [container\_insights](#input\_container\_insights) | containerInsights cluster setting: disabled, enabled or enhanced. Leave null to not manage the setting at all, which is how this module behaved before the variable existed. | `string` | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `any` | n/a | yes |
 
 ## Outputs
