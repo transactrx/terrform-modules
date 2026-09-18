@@ -57,3 +57,15 @@ moved {
   from = aws_iam_openid_connect_provider.github_identity_provider
   to   = aws_iam_openid_connect_provider.githubIdentityProvider
 }
+
+# 27d450b put the OIDC provider behind `count` so a second region can reuse the
+# first one's provider. That moved its state address from the bare name to [0].
+# Accounts that have applied since then are already at [0], so this block is a
+# no-op for them. A consumer arriving from an older vendored copy still holds
+# the un-indexed address, and without this move Terraform destroys and recreates
+# the account's GitHub OIDC provider -- which breaks every Actions deploy into
+# that account for the length of the apply.
+moved {
+  from = aws_iam_openid_connect_provider.githubIdentityProvider
+  to   = aws_iam_openid_connect_provider.githubIdentityProvider[0]
+}

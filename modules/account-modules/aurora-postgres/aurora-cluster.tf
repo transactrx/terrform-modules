@@ -51,6 +51,14 @@ resource "aws_rds_cluster" "aurora_postgres_cluster" {
   db_subnet_group_name        = aws_db_subnet_group.aurora_subnet_group.name
   vpc_security_group_ids      = [aws_security_group.aurora_sg.id] # Define a security group for Aurora
   backup_retention_period     = var.backup_retention_period
+
+  # Performance Insights is set on both the cluster and its instances. Aurora
+  # carries the flag in both places, and a cluster that already has it enabled
+  # would otherwise be reset to null the moment a consumer moves onto this
+  # module while only the instance-level attribute is managed here.
+  performance_insights_enabled          = var.performance_insights_enabled
+  performance_insights_retention_period = var.performance_insights_retention_period
+
   tags = {
     Name = "Aurora PostgreSQL Cluster"
   }
