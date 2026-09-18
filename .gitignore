@@ -8,3 +8,4 @@
 *.tfstate
 *.tfstate.*
 compatibility.json
+.terraform.lock.hcl
