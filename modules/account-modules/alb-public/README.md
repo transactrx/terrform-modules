@@ -41,6 +41,9 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_additional_certificate_arns"></a> [additional\_certificate\_arns](#input\_additional\_certificate\_arns) | n/a | `list(string)` | n/a | yes |
 | <a name="input_certificate_arn"></a> [certificate\_arn](#input\_certificate\_arn) | n/a | `string` | n/a | yes |
+| <a name="input_default_response_body"></a> [default\_response\_body](#input\_default\_response\_body) | Body of the :443 listener's default fixed response. | `string` | `"Forbidden"` | no |
+| <a name="input_default_response_content_type"></a> [default\_response\_content\_type](#input\_default\_response\_content\_type) | Content type of the :443 listener's default fixed response. | `string` | `"text/plain"` | no |
+| <a name="input_default_response_status_code"></a> [default\_response\_status\_code](#input\_default\_response\_status\_code) | HTTP status code of the :443 listener's default fixed response. | `string` | `"403"` | no |
 | <a name="input_domain_suffix"></a> [domain\_suffix](#input\_domain\_suffix) | n/a | `string` | n/a | yes |
 | <a name="input_ecs_cluster_name"></a> [ecs\_cluster\_name](#input\_ecs\_cluster\_name) | n/a | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | n/a | yes |

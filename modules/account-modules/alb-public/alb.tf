@@ -28,6 +28,27 @@ variable "additional_certificate_arns" {
   type = list(string)
 }
 
+# Default action for the :443 listener, returned when no listener rule matches.
+# The defaults reproduce this module's previous hardcoded response, so existing
+# consumers plan clean; override them to serve a friendlier page instead.
+variable "default_response_content_type" {
+  description = "Content type of the :443 listener's default fixed response."
+  type        = string
+  default     = "text/plain"
+}
+
+variable "default_response_body" {
+  description = "Body of the :443 listener's default fixed response."
+  type        = string
+  default     = "Forbidden"
+}
+
+variable "default_response_status_code" {
+  description = "HTTP status code of the :443 listener's default fixed response."
+  type        = string
+  default     = "403"
+}
+
 
 resource "aws_security_group" "sg" {
   name   = "${var.name}-sg"
@@ -79,9 +100,9 @@ resource "aws_lb_listener" "defaultListener443" {
   default_action {
     type = "fixed-response"
     fixed_response {
-      content_type = "text/plain"
-      message_body = "Forbidden"
-      status_code  = "403"
+      content_type = var.default_response_content_type
+      message_body = var.default_response_body
+      status_code  = var.default_response_status_code
     }
   }
   lifecycle {
