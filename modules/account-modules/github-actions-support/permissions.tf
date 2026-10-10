@@ -90,6 +90,18 @@ data "aws_iam_policy_document" "allow_ec2_actions" {
       "ec2:*VpcEndpoint",
       "ec2:*SecurityGroup",
       "ec2:*SecurityGroup*",
+      # Account network managed by the vpc module (subnets, route tables,
+      # internet gateway, Transit Gateway attachment). Reads are covered by
+      # Desc*/Get*; these let an apply change them.
+      "ec2:*Vpc",
+      "ec2:*VpcAttribute",
+      "ec2:*Subnet",
+      "ec2:*SubnetAttribute",
+      "ec2:*InternetGateway",
+      "ec2:*RouteTable",
+      "ec2:ReplaceRouteTableAssociation",
+      "ec2:*Route",
+      "ec2:*TransitGatewayVpcAttachment",
     ]
     resources = ["*"]
   }
@@ -339,6 +351,9 @@ data "aws_iam_policy_document" "allow-cognito-permissions" {
       "cognito-idp:DescribeUserPool",
       "cognito-idp:ListUserPools",
       "cognito-idp:GetUserPoolMfaConfig",
+      "cognito-idp:ListTagsForResource",
+      "cognito-idp:TagResource",
+      "cognito-idp:UntagResource",
 
       # User pool client
       "cognito-idp:CreateUserPoolClient",
@@ -568,4 +583,94 @@ resource "aws_iam_role_policy" "allow_dynamodb_actions" {
   name   = "allow_dynamodb_actions"
   role   = aws_iam_role.github_actions.name
   policy = data.aws_iam_policy_document.allow_dynamodb_actions.json
+}
+
+data "aws_iam_policy_document" "allow-acm-permissions" {
+  version = "2012-10-17"
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "acm:*"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "allow-acm-permissions" {
+  name   = "allow-acm-permissions"
+  role   = aws_iam_role.github_actions.name
+  policy = data.aws_iam_policy_document.allow-acm-permissions.json
+}
+
+# MSK multi-VPC connections from an account into a shared Kafka cluster, and
+# the bootstrap-broker lookup that consumers publish to SSM.
+data "aws_iam_policy_document" "allow_kafka_vpc_connections" {
+  version = "2012-10-17"
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "kafka:*VpcConnection*",
+      "kafka:GetBootstrapBrokers",
+      "kafka:DescribeCluster*",
+      "kafka:ListTagsForResource",
+      "kafka:TagResource",
+      "kafka:UntagResource"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "allow_kafka_vpc_connections" {
+  name   = "allow_kafka_vpc_connections"
+  role   = aws_iam_role.github_actions.name
+  policy = data.aws_iam_policy_document.allow_kafka_vpc_connections.json
+}
+
+# Account-level IAM that account repos manage alongside this module: IAM users
+# and their policies, instance profiles, this module's own OIDC provider and
+# role trust, and aws_iam_policy_attachment (which lists every entity on the
+# policy). No access keys or console passwords: the role cannot create
+# credentials for the users it manages.
+data "aws_iam_policy_document" "allow_iam_account_resources" {
+  version = "2012-10-17"
+
+  statement {
+    effect = "Allow"
+    actions = [
+      "iam:*User",
+      "iam:*UserPolicy",
+      "iam:*UserPolicies",
+      "iam:ListUserTags",
+      "iam:ListGroupsForUser",
+      "iam:ListAccessKeys",
+      "iam:ListSigningCertificates",
+      "iam:ListSSHPublicKeys",
+      "iam:ListServiceSpecificCredentials",
+      "iam:ListMFADevices",
+      "iam:GetLoginProfile",
+      "iam:*InstanceProfile*",
+      "iam:*OpenIDConnectProvider*",
+      "iam:ListEntitiesForPolicy",
+      "iam:AttachGroupPolicy",
+      "iam:DetachGroupPolicy",
+      "iam:ListPolicyTags",
+      "iam:TagPolicy",
+      "iam:UntagPolicy",
+      "iam:ListRoleTags",
+      "iam:TagRole",
+      "iam:UntagRole",
+      "iam:UpdateRole",
+      "iam:UpdateRoleDescription",
+      "iam:UpdateAssumeRolePolicy"
+    ]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role_policy" "allow_iam_account_resources" {
+  name   = "allow_iam_account_resources"
+  role   = aws_iam_role.github_actions.name
+  policy = data.aws_iam_policy_document.allow_iam_account_resources.json
 }
