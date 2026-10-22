@@ -103,6 +103,11 @@ variable "networkLoadBalancerAttachments" {
       name            = optional(string)
       healthCheckPort = optional(number)
       alpn_policy     = optional(string)
+      # Target-group protocol toward the container for THIS attachment;
+      # defaults to var.ecs_service_protocol. Lets a TCP passthrough listener
+      # (e.g. app-terminated mutual TLS) coexist with TLS attachments on the
+      # same service.
+      targetProtocol = optional(string)
   }))
   default = [{
     containerName   = null
@@ -115,6 +120,7 @@ variable "networkLoadBalancerAttachments" {
     name            = null
     healthCheckPort = null
     alpn_policy     = null
+    targetProtocol  = null
   }]
 }
 
@@ -149,7 +155,7 @@ resource "aws_lb_listener" "nlbListeners" {
 
 resource "aws_lb_target_group" "nlbTargetGroup" {
   count                = length(var.networkLoadBalancerAttachments)
-  protocol             = var.ecs_service_protocol
+  protocol             = coalesce(var.networkLoadBalancerAttachments[count.index].targetProtocol, var.ecs_service_protocol)
   target_type          = "ip"
   name                 = var.networkLoadBalancerAttachments[count.index].name != null ? "${var.serviceName}-${var.networkLoadBalancerAttachments[count.index].name}" : "${var.serviceName}-${var.networkLoadBalancerAttachments[count.index].containerName}-${var.networkLoadBalancerAttachments[count.index].containerPort}"
   deregistration_delay = 120
@@ -157,7 +163,10 @@ resource "aws_lb_target_group" "nlbTargetGroup" {
   //  load_balancing_algorithm_type = "least_outstanding_requests"
   slow_start = 0
   dynamic "stickiness" {
-    for_each = var.networkLoadBalancerAttachments[count.index].protocol == "TLS" ? [] : [
+    # AWS allows stickiness on TCP/UDP target groups only, never TLS — keyed on
+    # the TARGET protocol (previously the listener protocol, which broke a TCP
+    # listener in front of a TLS target group).
+    for_each = coalesce(var.networkLoadBalancerAttachments[count.index].targetProtocol, var.ecs_service_protocol) == "TLS" ? [] : [
       0
     ]
     content {
